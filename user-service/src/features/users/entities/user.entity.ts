@@ -2,6 +2,7 @@ import { Column, DeleteDateColumn, Entity, OneToMany } from "typeorm";
 import { BaseEntity } from "../../../common/entities/base.entity";
 import { refreshTokenEntity } from "../../../auth/entities/refresh-token.entity";
 import { Exclude } from "class-transformer";
+import { RoleEnum } from "../../../common/enums/role.enum";
 
 @Entity()
 export class UsersEntity extends BaseEntity {
@@ -13,6 +14,7 @@ export class UsersEntity extends BaseEntity {
     phone!: string;
 
     @Column({ type: "varchar", length: 255 })
+    @Exclude()
     password!: string;
 
     @Column({ type: "int" })
@@ -20,6 +22,9 @@ export class UsersEntity extends BaseEntity {
     
     @Column({ type: "text" })
     bio!: string;
+
+    @Column({ type: "enum", enum: RoleEnum, default: RoleEnum.REGULARUSER })
+    role!: RoleEnum;
 
     @DeleteDateColumn({ type: "timestamptz" })
     deletedAt!: Date | null;

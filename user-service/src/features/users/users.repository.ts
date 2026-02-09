@@ -12,6 +12,8 @@ import { createUserDto } from './dto/create-user.dto';
 import { updateUserDto } from './dto/update-user.dto';
 import { recoverUserDto } from './dto/recover-user.dto';
 import { recreateUserDto } from './dto/recreate-user.dto';
+import { RoleEnum } from '../../common/enums/role.enum';
+import { giveAdminDto } from './dto/give-admin.dto';
 
 @Injectable()
 export class UsersRepository
@@ -28,7 +30,7 @@ export class UsersRepository
     return this.getRepository(UsersEntity, entityManager);
   }
 
-  async getAllUsers(): Promise<UsersEntity[]> {
+  async getAllExistingUsers(): Promise<UsersEntity[]> {
     return this.usersRepository().find();
   }
 
@@ -86,7 +88,7 @@ export class UsersRepository
     if (updateRelust.affected) {
       return `update completed, updated colums: ${updateRelust.affected}`;
     }
-      throw new BadRequestException('nothing to update');
+    throw new BadRequestException('nothing to update');
   }
 
   async deleteOneUserById(userId: string): Promise<string> {
@@ -131,7 +133,7 @@ export class UsersRepository
   }
 
   async recoverUser(recoverUserData: recoverUserDto): Promise<string> {
-    const phone = recoverUserData.phone
+    const phone = recoverUserData.phone;
     const user = await this.usersRepository().findOne({
       withDeleted: true,
       where: { phone },
@@ -144,5 +146,27 @@ export class UsersRepository
     }
     this.usersRepository().restore({ phone });
     return `user ${user.login} recovered`;
+  }
+
+  async getAllUsers(): Promise<UsersEntity[]> {
+    return this.usersRepository().find({ withDeleted: true });
+  }
+
+  async deleteOneUserByIdHard(userId: string): Promise<string> {
+    try {
+      const result = await this.usersRepository().delete({ id: userId });
+      if (result.affected) return 'user affected';
+      return 'user not affected';
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+
+  async giveAdmin(giveAdminData: giveAdminDto): Promise<string> {
+    const updateRelust = await this.usersRepository().update({ id: giveAdminData.newAdminId }, { role: RoleEnum.ADMIN });
+    if (updateRelust.affected) {
+      return `update completed, updated colums: ${updateRelust.affected}`;
+    }
+    throw new BadRequestException();
   }
 }

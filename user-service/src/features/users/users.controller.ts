@@ -18,15 +18,18 @@ import { UpdateResult } from 'typeorm';
 import { Public } from '../../common/decorators/public.decorator';
 import { recoverUserDto } from './dto/recover-user.dto';
 import { recreateUserDto } from './dto/recreate-user.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../../common/enums/role.enum';
+import { giveAdminDto } from './dto/give-admin.dto';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
-  @Get('get-all')
-  async getAll(): Promise<UsersEntity[]> {
-    return this.usersService.getAllUsers();
+  
+  @Get('get-all-existing')
+  async getAllExisting(): Promise<UsersEntity[]> {
+    return this.usersService.getAllExistingUsers();
   }
 
   @Get('me')
@@ -35,7 +38,7 @@ export class UsersController {
     return this.usersService.findUserById(userId);
   }
 
-  @Patch('update-one')
+  @Patch('update-me')
   async updateOne(
     @Req() req: CustomRequest,
     @Body() updateData: updateUserDto,
@@ -45,7 +48,7 @@ export class UsersController {
   }
 
   @Delete('delete-me')
-  async deleteOne(@Req() req: CustomRequest): Promise<string> {
+  async deleteMe(@Req() req: CustomRequest): Promise<string> {
     const userId = req.userId;
     return this.usersService.deleteUser(userId);
   }
@@ -61,4 +64,23 @@ export class UsersController {
   async recreateUser(@Body() recreateUserData: recreateUserDto): Promise<UsersEntity> {
     return this.usersService.recreateUser(recreateUserData);
   }
+
+  @Get("get-all")
+  @Roles(RoleEnum.ADMIN)
+  async getAll(): Promise<UsersEntity[]> {
+    return this.usersService.getAll()
+  }
+
+  @Delete('delete-one-hard')
+  @Roles(RoleEnum.ADMIN)
+  async deleteOneHard(@Body() userId: string): Promise<string> {
+    return this.usersService.deleteUserHard(userId);
+  }
+
+  @Post("give-admin")
+  @Roles(RoleEnum.ADMIN)
+  async giveAdmin(@Body() giveAdminData: giveAdminDto): Promise<string> {
+    return this.usersService.giveAdmin(giveAdminData)
+  }
+  
 }

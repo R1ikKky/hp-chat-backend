@@ -5,6 +5,7 @@ import { ConfigsModule } from './configs/configs.module';
 import { ProvidersModule } from './providers/providers.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [AuthModule, FeaturesModule, ConfigsModule, ProvidersModule],
@@ -14,6 +15,10 @@ import { AuthGuard } from './guards/auth.guard';
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard
+    }
   ],
   exports: [AuthModule, FeaturesModule, ConfigsModule, ProvidersModule],
 })

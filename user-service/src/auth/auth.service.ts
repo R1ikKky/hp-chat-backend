@@ -13,6 +13,8 @@ import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { IRefreshTokenRepository } from './dto/refresh-token-repository.interface';
 import { logoutDto } from './dto/logout.dto';
+import { RoleEnum } from '../common/enums/role.enum';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +22,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly userRepository: IUsersRepository,
     private readonly refreshTokenRepository: IRefreshTokenRepository,
+    private readonly dataSource: DataSource
   ) {}
 
   async signup(
@@ -63,7 +66,7 @@ export class AuthService {
       age,
       bio,
     });
-    const tokens = await this.generateUserTokens(user.id, userAgent, ip);
+    const tokens = await this.generateUserTokens(user.id, user.role, userAgent, ip);
     return {
       user,
       tokens,
@@ -95,7 +98,7 @@ export class AuthService {
 
     if (user.deletedAt) throw new NotFoundException('this user was deleted');
 
-    const tokens = await this.generateUserTokens(user.id, userAgent, ip);
+    const tokens = await this.generateUserTokens(user.id, user.role, userAgent, ip);
     return {
       ...tokens,
       userId: user.id,
@@ -117,25 +120,35 @@ export class AuthService {
     refreshToken: string;
   }> {
     const userAgent = req.headers['user-agent'];
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.startTransaction();
 
-    const token =
-      await this.refreshTokenRepository.returnRefreshTokenAndDeleteItAfter(
-        refreshToken,
-      );
-    if (!token) throw new UnauthorizedException('invalid refresh token');
+    try{
+      const token = await this.refreshTokenRepository.findRefreshToken(refreshToken)
+      if (!token) throw new UnauthorizedException('invalid refresh token');
+      await this.refreshTokenRepository.deleteRefreshToken(refreshToken)
+      await queryRunner.commitTransaction()
+      return this.generateUserTokens(token.userId, token.user.role, userAgent, ip);
+    } catch(e) {
+      await queryRunner.rollbackTransaction()
+      throw new UnauthorizedException(`someting went wrong ${e}`)
+    } finally {
+      await queryRunner.release()
+    }
 
-    return this.generateUserTokens(token.userId, userAgent, ip);
   }
 
   async generateUserTokens(
     userId: string,
+    userRole: RoleEnum,
     userAgent: string,
     ip: string,
   ): Promise<{
     accessToken: string;
     refreshToken: string;
   }> {
-    const accessToken = this.jwtService.sign({ userId });
+
+    const accessToken = this.jwtService.sign({ userId, userRole });
     const refreshToken = uuidv4();
 
     await this.saveRefreshToken(refreshToken, userId, userAgent, ip);

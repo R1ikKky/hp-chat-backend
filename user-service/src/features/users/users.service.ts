@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger } from '@nestjs/common';
 import { IUsersRepository } from './dto/users-repository.interface';
 import { UsersEntity } from './entities/user.entity';
 import { createUserDto } from './dto/create-user.dto';
@@ -8,6 +8,8 @@ import { UpdateResult } from 'typeorm';
 import { recoverUserDto } from './dto/recover-user.dto';
 import { recreateUserDto } from './dto/recreate-user.dto';
 import * as bcrypt from 'bcrypt';
+import { giveAdminDto } from './dto/give-admin.dto';
+import { RoleEnum } from '../../common/enums/role.enum';
 
 @Injectable()
 export class UsersService {
@@ -15,8 +17,8 @@ export class UsersService {
         private readonly refreshTokenRepository: IRefreshTokenRepository
     ) {}
     
-    getAllUsers(): Promise<UsersEntity[]> {
-        return this.userRepository.getAllUsers()
+    getAllExistingUsers(): Promise<UsersEntity[]> {
+        return this.userRepository.getAllExistingUsers()
     }
 
     findUserById(userId: string): Promise<UsersEntity | null> {
@@ -52,5 +54,29 @@ export class UsersService {
 
         recreateUserData = {login, phone, password: hashedPassword, age, bio}
         return this.userRepository.recreateUser(recreateUserData)
+    }
+
+    //admin method
+    getAll(): Promise<UsersEntity[]> {
+        return this.userRepository.getAllUsers()
+    }
+
+    //admin method
+    async deleteUserHard(userId: string) {
+        const user = await this.userRepository.findUserByIdWithDeleted(userId)
+        if(!user) throw new BadRequestException("user not found")
+        if(user.deletedAt) Logger.warn("user was already softly deleted") 
+        const userDeleted = await this.userRepository.deleteOneUserByIdHard(userId)
+        const refreshTokenDeleted = await this.refreshTokenRepository.deleteRefreshTokenByUserId(userId)
+        return `${userDeleted}, ${refreshTokenDeleted}`
+    }
+
+    //admin method
+    async giveAdmin(giveAdminData: giveAdminDto): Promise<string> {
+        const userId = giveAdminData.newAdminId
+        const user = await this.userRepository.findUserByIdWithDeleted(userId)
+        if(!user || user.deletedAt) throw new BadRequestException("user not found") 
+        if(user.role === RoleEnum.ADMIN) throw new BadRequestException(`user '${giveAdminData.newAdminId}' is already admin`);
+        return this.userRepository.giveAdmin(giveAdminData)
     }
 }

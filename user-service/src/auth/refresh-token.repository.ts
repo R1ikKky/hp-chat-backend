@@ -43,6 +43,7 @@ export class RefreshTokenRepository
   findRefreshToken(refreshToken: string): Promise<refreshTokenEntity | null> {
     return this.refreshTokenRepository().findOne({
       where: { refreshToken, expiresIn: MoreThanOrEqual(new Date()) },
+      relations: { user: true }
     });
   }
 
@@ -60,12 +61,12 @@ export class RefreshTokenRepository
     return deletedToken.raw[0];
   }
 
-  async deleteRefreshTokenByUserId(userId: string) {
+  async deleteRefreshTokenByUserId(userId: string): Promise<string> {
     this.refreshTokenRepository().delete( { userId } )
     return "refresh token deleted"
   }
 
-  async deleteRefreshToken(refreshToken: string) {
+  async deleteRefreshToken(refreshToken: string): Promise<string> {
     this.refreshTokenRepository().delete( { refreshToken } )
     return "refresh token deleted"
   }
