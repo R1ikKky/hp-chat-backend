@@ -1,19 +1,17 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   Logger,
 } from '@nestjs/common';
 import { IUsersRepository } from './dto/users-repository.interface';
 import { UsersEntity } from './entities/user.entity';
-import { createUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { IRefreshTokenRepository } from '../../auth/dto/refresh-token-repository.interface';
-import { updateUserDto } from './dto/update-user.dto';
-import { UpdateResult } from 'typeorm';
-import { recoverUserDto } from './dto/recover-user.dto';
-import { recreateUserDto } from './dto/recreate-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { RecoverUserDto } from './dto/recover-user.dto';
+import { RecreateUserDto } from './dto/recreate-user.dto';
 import * as bcrypt from 'bcrypt';
-import { giveAdminDto } from './dto/give-admin.dto';
+import { GiveAdminDto } from './dto/give-admin.dto';
 import { RoleEnum } from '../../common/enums/role.enum';
 import { UserDto } from '../../common/dtos/user-public.dto';
 
@@ -32,11 +30,11 @@ export class UsersService {
     return this.userRepository.findUserById(userId);
   }
 
-  async createUser(createUserData: createUserDto): Promise<UsersEntity | null> {
+  async createUser(createUserData: CreateUserDto): Promise<UsersEntity | null> {
     return this.userRepository.createOneUser(createUserData);
   }
 
-  async updateUser(userId: string, updateData: updateUserDto): Promise<string> {
+  async updateUser(userId: string, updateData: UpdateUserDto): Promise<string> {
     const user = await this.userRepository.findUserByIdWithDeleted(userId);
     if (!user || user.deletedAt)
       throw new BadRequestException('user not found');
@@ -53,7 +51,7 @@ export class UsersService {
     return `${userDeleted}, ${refreshTokenDeleted}`;
   }
 
-  async recoverUser(recoverUserData: recoverUserDto): Promise<string> {
+  async recoverUser(recoverUserData: RecoverUserDto): Promise<string> {
     //add number verification
     const user = await this.userRepository.findUserByPhoneWithDeleted(
       recoverUserData.phone,
@@ -64,7 +62,7 @@ export class UsersService {
     return this.userRepository.recoverUser(recoverUserData);
   }
 
-  async recreateUser(recreateUserData: recreateUserDto): Promise<UserDto> {
+  async recreateUser(recreateUserData: RecreateUserDto): Promise<UserDto> {
     const { login, phone, password, age, bio } = recreateUserData;
     //add number verification
     const salt = await bcrypt.genSalt();
@@ -91,7 +89,7 @@ export class UsersService {
   }
 
   //admin method
-  async giveAdmin(giveAdminData: giveAdminDto): Promise<string> {
+  async giveAdmin(giveAdminData: GiveAdminDto): Promise<string> {
     const userId = giveAdminData.newAdminId;
     const user = await this.userRepository.findUserByIdWithDeleted(userId);
     if (!user || user.deletedAt)

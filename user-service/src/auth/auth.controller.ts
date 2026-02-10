@@ -2,10 +2,9 @@ import { Body, Controller, HttpStatus, Ip, Post, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
-import { UsersEntity } from '../features/users/entities/user.entity';
 import { RefreshTokenDto } from './dto/refresh-tokens.dto';
 import { Public } from '../common/decorators/public.decorator';
-import { logoutDto } from './dto/logout.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SignupResponseDto } from './dto/signup-response.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -96,7 +95,7 @@ export class AuthController {
   @ApiParam({
     name: 'logoutData',
     required: true,
-    type: logoutDto,
+    type: LogoutDto,
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -104,7 +103,7 @@ export class AuthController {
     type: TokensDto,
   })
   @Post('logout')
-  async logout(@Body() logoutData: logoutDto): Promise<string> {
+  async logout(@Body() logoutData: LogoutDto): Promise<string> {
     return this.authService.logout(logoutData);
   }
 }

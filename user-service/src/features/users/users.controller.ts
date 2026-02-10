@@ -11,17 +11,14 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UsersEntity } from './entities/user.entity';
-import type { createUserDto } from './dto/create-user.dto';
-import { updateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import type { CustomRequest } from '../../common/interfaces/customRequest.interface';
-import { UpdateResult } from 'typeorm';
 import { Public } from '../../common/decorators/public.decorator';
-import { recoverUserDto } from './dto/recover-user.dto';
-import { recreateUserDto } from './dto/recreate-user.dto';
+import { RecoverUserDto } from './dto/recover-user.dto';
+import { RecreateUserDto } from './dto/recreate-user.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RoleEnum } from '../../common/enums/role.enum';
-import { giveAdminDto } from './dto/give-admin.dto';
+import { GiveAdminDto } from './dto/give-admin.dto';
 import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserDto } from '../../common/dtos/user-public.dto';
 
@@ -47,7 +44,7 @@ export class UsersController {
   @ApiParam({
     name: 'updateData',
     required: true,
-    type: updateUserDto,
+    type: UpdateUserDto,
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -65,7 +62,7 @@ export class UsersController {
   @Patch('update-me')
   async updateOne(
     @Req() req: CustomRequest,
-    @Body() updateData: updateUserDto,
+    @Body() updateData: UpdateUserDto,
   ): Promise<string> {
     const userId = req.userId;
     return this.usersService.updateUser(userId, updateData);
@@ -89,7 +86,7 @@ export class UsersController {
   @ApiParam({
     name: 'recoverUserData',
     required: true,
-    type: recoverUserDto,
+    type: RecoverUserDto,
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -102,14 +99,14 @@ export class UsersController {
   })
   @Public()
   @Post('recover-me')
-  async recoverUser(@Body() recoverUserData: recoverUserDto): Promise<string> {
+  async recoverUser(@Body() recoverUserData: RecoverUserDto): Promise<string> {
     return this.usersService.recoverUser(recoverUserData);
   }
 
   @ApiParam({
     name: 'recreateUserData',
     required: true,
-    type: recreateUserDto,
+    type: RecreateUserDto,
   })
     @ApiResponse({
     status: HttpStatus.OK,
@@ -131,7 +128,7 @@ export class UsersController {
   @Public()
   @Post('recreate-me')
   async recreateUser(
-    @Body() recreateUserData: recreateUserDto,
+    @Body() recreateUserData: RecreateUserDto,
   ): Promise<UserDto> {
     return this.usersService.recreateUser(recreateUserData);
   }
@@ -170,7 +167,7 @@ export class UsersController {
   @ApiParam({
     name: 'giveAdminData',
     required: true,
-    type: giveAdminDto,
+    type: GiveAdminDto,
   })
       @ApiResponse({
     status: HttpStatus.OK,
@@ -187,7 +184,7 @@ export class UsersController {
   })
   @Post('give-admin')
   @Roles(RoleEnum.ADMIN)
-  async giveAdmin(@Body() giveAdminData: giveAdminDto): Promise<string> {
+  async giveAdmin(@Body() giveAdminData: GiveAdminDto): Promise<string> {
     return this.usersService.giveAdmin(giveAdminData);
   }
 }

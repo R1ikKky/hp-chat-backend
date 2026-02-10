@@ -1,19 +1,18 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
   NotImplementedException,
 } from '@nestjs/common';
 import { BaseRepository } from '../../common/repositories/base.repository';
-import { DataSource, EntityManager, Repository, UpdateResult } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { UsersEntity } from './entities/user.entity';
 import { IUsersRepository } from './dto/users-repository.interface';
-import { createUserDto } from './dto/create-user.dto';
-import { updateUserDto } from './dto/update-user.dto';
-import { recoverUserDto } from './dto/recover-user.dto';
-import { recreateUserDto } from './dto/recreate-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { RecoverUserDto } from './dto/recover-user.dto';
+import { RecreateUserDto } from './dto/recreate-user.dto';
 import { RoleEnum } from '../../common/enums/role.enum';
-import { giveAdminDto } from './dto/give-admin.dto';
+import { GiveAdminDto } from './dto/give-admin.dto';
 
 @Injectable()
 export class UsersRepository
@@ -73,13 +72,13 @@ export class UsersRepository
     });
   }
 
-  async createOneUser(createUserData: createUserDto): Promise<UsersEntity> {
+  async createOneUser(createUserData: CreateUserDto): Promise<UsersEntity> {
     return this.usersRepository().save(createUserData);
   }
 
   async updateUser(
     userId: string,
-    updateUserData: updateUserDto,
+    updateUserData: UpdateUserDto,
   ): Promise<string> {
     const updateRelust = await this.usersRepository().update(
       userId,
@@ -111,7 +110,7 @@ export class UsersRepository
     }
   }
 
-  async recreateUser(recreateUserData: recreateUserDto): Promise<UsersEntity> {
+  async recreateUser(recreateUserData: RecreateUserDto): Promise<UsersEntity> {
     const phone = recreateUserData.phone;
     const user = await this.usersRepository().findOne({
       withDeleted: true,
@@ -132,7 +131,7 @@ export class UsersRepository
     }
   }
 
-  async recoverUser(recoverUserData: recoverUserDto): Promise<string> {
+  async recoverUser(recoverUserData: RecoverUserDto): Promise<string> {
     const phone = recoverUserData.phone;
     const user = await this.usersRepository().findOne({
       withDeleted: true,
@@ -162,7 +161,7 @@ export class UsersRepository
     }
   }
 
-  async giveAdmin(giveAdminData: giveAdminDto): Promise<string> {
+  async giveAdmin(giveAdminData: GiveAdminDto): Promise<string> {
     const updateRelust = await this.usersRepository().update({ id: giveAdminData.newAdminId }, { role: RoleEnum.ADMIN });
     if (updateRelust.affected) {
       return `update completed, updated colums: ${updateRelust.affected}`;

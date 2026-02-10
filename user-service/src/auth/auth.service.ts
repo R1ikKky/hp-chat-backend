@@ -8,11 +8,10 @@ import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { SignupDto } from './dto/signup.dto';
 import { IUsersRepository } from '../features/users/dto/users-repository.interface';
-import { UsersEntity } from '../features/users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { IRefreshTokenRepository } from './dto/refresh-token-repository.interface';
-import { logoutDto } from './dto/logout.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { RoleEnum } from '../common/enums/role.enum';
 import { DataSource } from 'typeorm';
 import { SignupResponseDto } from './dto/signup-response.dto';
@@ -108,7 +107,7 @@ export class AuthService {
     };
   }
 
-  async logout(logoutData: logoutDto): Promise<string> {
+  async logout(logoutData: LogoutDto): Promise<string> {
     return this.refreshTokenRepository.deleteRefreshToken(
       logoutData.refreshToken,
     );

@@ -6,7 +6,6 @@ import {
   MethodNotAllowedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Observable } from 'rxjs';
 import { CustomRequest } from '../common/interfaces/customRequest.interface';
 
 @Injectable()
