@@ -21,12 +21,14 @@ import { recreateUserDto } from './dto/recreate-user.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RoleEnum } from '../../common/enums/role.enum';
 import { giveAdminDto } from './dto/give-admin.dto';
+import { ApiParam, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Users')
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-  
+
   @Get('get-all-existing')
   async getAllExisting(): Promise<UsersEntity[]> {
     return this.usersService.getAllExistingUsers();
@@ -38,6 +40,11 @@ export class UsersController {
     return this.usersService.findUserById(userId);
   }
 
+  @ApiParam({
+    name: 'updateData',
+    required: true,
+    type: updateUserDto,
+  })
   @Patch('update-me')
   async updateOne(
     @Req() req: CustomRequest,
@@ -53,34 +60,55 @@ export class UsersController {
     return this.usersService.deleteUser(userId);
   }
 
+  @ApiParam({
+    name: 'recoverUserData',
+    required: true,
+    type: recoverUserDto,
+  })
   @Public()
   @Post('recover-me')
   async recoverUser(@Body() recoverUserData: recoverUserDto): Promise<string> {
     return this.usersService.recoverUser(recoverUserData);
   }
 
+  @ApiParam({
+    name: 'recreateUserData',
+    required: true,
+    type: recreateUserDto,
+  })
   @Public()
   @Post('recreate-me')
-  async recreateUser(@Body() recreateUserData: recreateUserDto): Promise<UsersEntity> {
+  async recreateUser(
+    @Body() recreateUserData: recreateUserDto,
+  ): Promise<UsersEntity> {
     return this.usersService.recreateUser(recreateUserData);
   }
 
-  @Get("get-all")
+  @Get('get-all')
   @Roles(RoleEnum.ADMIN)
   async getAll(): Promise<UsersEntity[]> {
-    return this.usersService.getAll()
+    return this.usersService.getAll();
   }
 
+  @ApiParam({
+    name: 'userId',
+    required: true,
+    type: "uuid",
+  })
   @Delete('delete-one-hard')
   @Roles(RoleEnum.ADMIN)
   async deleteOneHard(@Body() userId: string): Promise<string> {
     return this.usersService.deleteUserHard(userId);
   }
 
-  @Post("give-admin")
+  @ApiParam({
+    name: 'giveAdminData',
+    required: true,
+    type: giveAdminDto,
+  })
+  @Post('give-admin')
   @Roles(RoleEnum.ADMIN)
   async giveAdmin(@Body() giveAdminData: giveAdminDto): Promise<string> {
-    return this.usersService.giveAdmin(giveAdminData)
+    return this.usersService.giveAdmin(giveAdminData);
   }
-  
 }

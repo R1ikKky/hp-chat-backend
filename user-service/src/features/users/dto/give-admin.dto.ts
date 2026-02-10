@@ -1,5 +1,8 @@
-import { IsUUID } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsUUID } from 'class-validator';
 
 export class giveAdminDto {
-    @IsUUID() newAdminId!: string
+  @ApiProperty({ nullable: false })
+  @IsUUID()
+  newAdminId!: string;
 }

@@ -1,9 +1,20 @@
-import { IsNumber, IsPhoneNumber, IsString } from "class-validator"
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber, IsPhoneNumber, IsString } from 'class-validator';
 
 export class createUserDto {
-    @IsString() login!: string;
-    @IsPhoneNumber("RU") phone!: string;
-    @IsString() password!: string;
-    @IsNumber() age!: number;
-    @IsString() bio!: string
+  @ApiProperty({ description: "User unique identifier",nullable: false})
+  @IsString()
+  login!: string;
+  @ApiProperty({ nullable: false })
+  @IsPhoneNumber('RU')
+  phone!: string;
+  @ApiProperty({ nullable: false })
+  @IsString()
+  password!: string;
+  @ApiProperty({ nullable: false })
+  @IsNumber()
+  age!: number;
+  @ApiProperty({ nullable: false })
+  @IsString()
+  bio!: string;
 }

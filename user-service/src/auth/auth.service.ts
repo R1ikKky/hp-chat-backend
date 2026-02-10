@@ -22,7 +22,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly userRepository: IUsersRepository,
     private readonly refreshTokenRepository: IRefreshTokenRepository,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
   ) {}
 
   async signup(
@@ -37,7 +37,7 @@ export class AuthService {
     };
   }> {
     const { login, phone, password, age, bio } = signupData;
-    
+
     const userAgent = req.headers['user-agent'];
 
     const phoneInUse =
@@ -66,7 +66,12 @@ export class AuthService {
       age,
       bio,
     });
-    const tokens = await this.generateUserTokens(user.id, user.role, userAgent, ip);
+    const tokens = await this.generateUserTokens(
+      user.id,
+      user.role,
+      userAgent,
+      ip,
+    );
     return {
       user,
       tokens,
@@ -98,7 +103,12 @@ export class AuthService {
 
     if (user.deletedAt) throw new NotFoundException('this user was deleted');
 
-    const tokens = await this.generateUserTokens(user.id, user.role, userAgent, ip);
+    const tokens = await this.generateUserTokens(
+      user.id,
+      user.role,
+      userAgent,
+      ip,
+    );
     return {
       ...tokens,
       userId: user.id,
@@ -123,19 +133,24 @@ export class AuthService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.startTransaction();
 
-    try{
-      const token = await this.refreshTokenRepository.findRefreshToken(refreshToken)
+    try {
+      const token =
+        await this.refreshTokenRepository.findRefreshToken(refreshToken);
       if (!token) throw new UnauthorizedException('invalid refresh token');
-      await this.refreshTokenRepository.deleteRefreshToken(refreshToken)
-      await queryRunner.commitTransaction()
-      return this.generateUserTokens(token.userId, token.user.role, userAgent, ip);
-    } catch(e) {
-      await queryRunner.rollbackTransaction()
-      throw new UnauthorizedException(`someting went wrong ${e}`)
+      await this.refreshTokenRepository.deleteRefreshToken(refreshToken);
+      await queryRunner.commitTransaction();
+      return this.generateUserTokens(
+        token.userId,
+        token.user.role,
+        userAgent,
+        ip,
+      );
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      throw new UnauthorizedException(`someting went wrong ${e}`);
     } finally {
-      await queryRunner.release()
+      await queryRunner.release();
     }
-
   }
 
   async generateUserTokens(
@@ -147,7 +162,6 @@ export class AuthService {
     accessToken: string;
     refreshToken: string;
   }> {
-
     const accessToken = this.jwtService.sign({ userId, userRole });
     const refreshToken = uuidv4();
 

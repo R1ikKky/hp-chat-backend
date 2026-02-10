@@ -7,8 +7,6 @@ import { recreateUserDto } from "./recreate-user.dto";
 import { giveAdminDto } from "./give-admin.dto";
 
 export abstract class IUsersRepository {
-    //admin only
-    abstract getAllUsers(): Promise<UsersEntity[]>
     abstract getAllExistingUsers(): Promise<UsersEntity[]>;
     abstract findUserById(userId: string): Promise<UsersEntity | null>;
     abstract findUserByIdWithDeleted(userId: string): Promise<UsersEntity | null>;
@@ -21,8 +19,7 @@ export abstract class IUsersRepository {
     abstract deleteOneUserById(userId: string): Promise<string>
     abstract recreateUser(recreateUserData: recreateUserDto): Promise<UsersEntity>
     abstract recoverUser(recoverUserData: recoverUserDto): Promise<string>
-    //admin only
+    abstract getAllUsers(): Promise<UsersEntity[]>
     abstract deleteOneUserByIdHard(userId: string): Promise<string>
-    //admin only
     abstract giveAdmin(giveAdminData: giveAdminDto): Promise<string>
 } 

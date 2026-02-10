@@ -1,6 +1,8 @@
-import { IsUUID } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsUUID } from 'class-validator';
 
 export class RefreshTokenDto {
-    @IsUUID()
-    refreshToken!: string;
+  @ApiProperty({ nullable: false })
+  @IsUUID()
+  refreshToken!: string;
 }

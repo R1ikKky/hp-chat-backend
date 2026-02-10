@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsNumber,
   IsPhoneNumber,
@@ -7,14 +8,23 @@ import {
 } from 'class-validator';
 
 export class SignupDto {
-  @IsString() login!: string;
-  @IsPhoneNumber("RU") phone!: string;
+  @ApiProperty({ nullable: false })
+  @IsString()
+  login!: string;
+  @ApiProperty({ nullable: false })
+  @IsPhoneNumber('RU')
+  phone!: string;
+  @ApiProperty({ nullable: false })
   @IsString()
   @MinLength(6)
   @Matches(/^(?=.*[0-9])/, {
     message: 'Password must contain at least one number',
   })
   password!: string;
-  @IsNumber() age!: number;
-  @IsString() bio!: string;
+  @ApiProperty({ nullable: false })
+  @IsNumber()
+  age!: number;
+  @ApiProperty({ nullable: false })
+  @IsString()
+  bio!: string;
 }
