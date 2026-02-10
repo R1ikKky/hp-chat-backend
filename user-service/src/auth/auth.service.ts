@@ -15,6 +15,9 @@ import { IRefreshTokenRepository } from './dto/refresh-token-repository.interfac
 import { logoutDto } from './dto/logout.dto';
 import { RoleEnum } from '../common/enums/role.enum';
 import { DataSource } from 'typeorm';
+import { SignupResponseDto } from './dto/signup-response.dto';
+import { LoginResponseDto } from './dto/login-response.dto';
+import { TokensDto } from './dto/tokens.dto';
 
 @Injectable()
 export class AuthService {
@@ -29,13 +32,7 @@ export class AuthService {
     signupData: SignupDto,
     req: Request,
     ip: string,
-  ): Promise<{
-    user: UsersEntity;
-    tokens: {
-      accessToken: string;
-      refreshToken: string;
-    };
-  }> {
+  ): Promise<SignupResponseDto> {
     const { login, phone, password, age, bio } = signupData;
 
     const userAgent = req.headers['user-agent'];
@@ -82,11 +79,7 @@ export class AuthService {
     loginDto: LoginDto,
     req: Request,
     ip: string,
-  ): Promise<{
-    userId: string;
-    accessToken: string;
-    refreshToken: string;
-  }> {
+  ): Promise<LoginResponseDto> {
     const { phone, password } = loginDto;
     const userAgent = req.headers['user-agent'];
 
@@ -98,7 +91,7 @@ export class AuthService {
       user.password,
     );
     if (!passwordIsCorrect) {
-      throw new UnauthorizedException('password doesnt match');
+      throw new UnauthorizedException('wrong credentials');
     }
 
     if (user.deletedAt) throw new NotFoundException('this user was deleted');
@@ -125,10 +118,7 @@ export class AuthService {
     refreshToken: string,
     req: Request,
     ip: string,
-  ): Promise<{
-    accessToken: string;
-    refreshToken: string;
-  }> {
+  ): Promise<TokensDto> {
     const userAgent = req.headers['user-agent'];
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.startTransaction();
@@ -158,10 +148,7 @@ export class AuthService {
     userRole: RoleEnum,
     userAgent: string,
     ip: string,
-  ): Promise<{
-    accessToken: string;
-    refreshToken: string;
-  }> {
+  ): Promise<TokensDto> {
     const accessToken = this.jwtService.sign({ userId, userRole });
     const refreshToken = uuidv4();
 

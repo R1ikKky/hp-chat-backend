@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpStatus,
   Patch,
   Post,
   Req,
@@ -21,7 +22,8 @@ import { recreateUserDto } from './dto/recreate-user.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RoleEnum } from '../../common/enums/role.enum';
 import { giveAdminDto } from './dto/give-admin.dto';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { UserDto } from '../../common/dtos/user-public.dto';
 
 @ApiTags('Users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -29,13 +31,15 @@ import { ApiParam, ApiTags } from '@nestjs/swagger';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: UserDto })
   @Get('get-all-existing')
-  async getAllExisting(): Promise<UsersEntity[]> {
+  async getAllExisting(): Promise<UserDto[]> {
     return this.usersService.getAllExistingUsers();
   }
 
+  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: UserDto })
   @Get('me')
-  async getOne(@Req() req: CustomRequest): Promise<UsersEntity | null> {
+  async getOne(@Req() req: CustomRequest): Promise<UserDto | null> {
     const userId = req.userId;
     return this.usersService.findUserById(userId);
   }
@@ -44,6 +48,19 @@ export class UsersController {
     name: 'updateData',
     required: true,
     type: updateUserDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Success',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'nothing to update',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user not found',
   })
   @Patch('update-me')
   async updateOne(
@@ -54,6 +71,15 @@ export class UsersController {
     return this.usersService.updateUser(userId, updateData);
   }
 
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Success',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user not found',
+  })
   @Delete('delete-me')
   async deleteMe(@Req() req: CustomRequest): Promise<string> {
     const userId = req.userId;
@@ -64,6 +90,15 @@ export class UsersController {
     name: 'recoverUserData',
     required: true,
     type: recoverUserDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Success',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user not found',
   })
   @Public()
   @Post('recover-me')
@@ -76,24 +111,55 @@ export class UsersController {
     required: true,
     type: recreateUserDto,
   })
+    @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Success',
+    type: UserDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user not found',
+  })
+    @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user already exists',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_IMPLEMENTED,
+    description: 'couldnt delete user',
+  })
   @Public()
   @Post('recreate-me')
   async recreateUser(
     @Body() recreateUserData: recreateUserDto,
-  ): Promise<UsersEntity> {
+  ): Promise<UserDto> {
     return this.usersService.recreateUser(recreateUserData);
   }
 
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Success',
+    type: UserDto,
+  })
   @Get('get-all')
   @Roles(RoleEnum.ADMIN)
-  async getAll(): Promise<UsersEntity[]> {
+  async getAll(): Promise<UserDto[]> {
     return this.usersService.getAll();
   }
 
   @ApiParam({
     name: 'userId',
     required: true,
-    type: "uuid",
+    type: 'uuid',
+  })
+    @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Success',
+    type: "string",
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user not found',
   })
   @Delete('delete-one-hard')
   @Roles(RoleEnum.ADMIN)
@@ -105,6 +171,19 @@ export class UsersController {
     name: 'giveAdminData',
     required: true,
     type: giveAdminDto,
+  })
+      @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Success',
+    type: "string",
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user not found',
+  })
+   @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user <recieved userId> is already admin'
   })
   @Post('give-admin')
   @Roles(RoleEnum.ADMIN)

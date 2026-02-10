@@ -15,6 +15,7 @@ import { recreateUserDto } from './dto/recreate-user.dto';
 import * as bcrypt from 'bcrypt';
 import { giveAdminDto } from './dto/give-admin.dto';
 import { RoleEnum } from '../../common/enums/role.enum';
+import { UserDto } from '../../common/dtos/user-public.dto';
 
 @Injectable()
 export class UsersService {
@@ -23,11 +24,11 @@ export class UsersService {
     private readonly refreshTokenRepository: IRefreshTokenRepository,
   ) {}
 
-  getAllExistingUsers(): Promise<UsersEntity[]> {
+  getAllExistingUsers(): Promise<UserDto[]> {
     return this.userRepository.getAllExistingUsers();
   }
 
-  findUserById(userId: string): Promise<UsersEntity | null> {
+  findUserById(userId: string): Promise<UserDto | null> {
     return this.userRepository.findUserById(userId);
   }
 
@@ -36,6 +37,9 @@ export class UsersService {
   }
 
   async updateUser(userId: string, updateData: updateUserDto): Promise<string> {
+    const user = await this.userRepository.findUserByIdWithDeleted(userId);
+    if (!user || user.deletedAt)
+      throw new BadRequestException('user not found');
     return this.userRepository.updateUser(userId, updateData);
   }
 
@@ -51,10 +55,16 @@ export class UsersService {
 
   async recoverUser(recoverUserData: recoverUserDto): Promise<string> {
     //add number verification
+    const user = await this.userRepository.findUserByPhoneWithDeleted(
+      recoverUserData.phone,
+    );
+    if (!user || user.deletedAt)
+      throw new BadRequestException('user not found');
+
     return this.userRepository.recoverUser(recoverUserData);
   }
 
-  async recreateUser(recreateUserData: recreateUserDto): Promise<UsersEntity> {
+  async recreateUser(recreateUserData: recreateUserDto): Promise<UserDto> {
     const { login, phone, password, age, bio } = recreateUserData;
     //add number verification
     const salt = await bcrypt.genSalt();
@@ -65,7 +75,7 @@ export class UsersService {
   }
 
   //admin method
-  getAll(): Promise<UsersEntity[]> {
+  getAll(): Promise<UserDto[]> {
     return this.userRepository.getAllUsers();
   }
 

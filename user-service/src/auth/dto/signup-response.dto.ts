@@ -1,9 +1,7 @@
-import { UsersEntity } from '../../features/users/entities/user.entity';
+import { UserDto } from '../../common/dtos/user-public.dto';
+import { TokensDto } from './tokens.dto';
 
-export class signupResponseDto {
-  user!: UsersEntity;
-  tokens!: {
-    accessToken: string;
-    refreshToken: string;
-  };
+export class SignupResponseDto {
+  user!: UserDto;
+  tokens!: TokensDto;
 }

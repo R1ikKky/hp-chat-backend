@@ -118,7 +118,7 @@ export class UsersRepository
       where: { phone },
     });
     if (!user) {
-      throw new BadRequestException('no user found');
+      throw new BadRequestException('user not found');
     }
     if (!user.deletedAt) {
       throw new BadRequestException('user already exists');
@@ -128,7 +128,7 @@ export class UsersRepository
       const newUser = this.usersRepository().save(recreateUserData);
       return newUser;
     } else {
-      throw new NotImplementedException("couldn't delete user");
+      throw new NotImplementedException("couldnt delete user");
     }
   }
 
