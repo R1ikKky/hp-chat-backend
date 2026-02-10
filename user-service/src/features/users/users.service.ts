@@ -56,7 +56,7 @@ export class UsersService {
     const user = await this.userRepository.findUserByPhoneWithDeleted(
       recoverUserData.phone,
     );
-    if (!user || user.deletedAt)
+    if (!user)
       throw new BadRequestException('user not found');
 
     return this.userRepository.recoverUser(recoverUserData);
