@@ -18,7 +18,6 @@ import { refreshTokenRepositoryProvider } from './dto/refresh-token-repository.p
       imports: [ConfigModule],
       useFactory: async (cfg) => ({  
         secret: cfg.get('JWT_SECRET'),
-        signOptions: { expiresIn: '15m' },
       }),
       global: true,
       inject: [ConfigService],

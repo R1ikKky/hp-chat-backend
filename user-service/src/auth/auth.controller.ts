@@ -1,13 +1,18 @@
-import { Body, Controller, HttpStatus, Ip, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Headers,
+  HttpStatus,
+  Ip,
+  Post,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { SignupDto } from './dto/signup.dto';
+import { LoginDto, LoginResponseDto } from './dto/login.dto';
+import { SignupDto, SignupResponseDto } from './dto/signup.dto';
 import { RefreshTokenDto } from './dto/refresh-tokens.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { LogoutDto } from './dto/logout.dto';
 import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { SignupResponseDto } from './dto/signup-response.dto';
-import { LoginResponseDto } from './dto/login-response.dto';
 import { TokensDto } from './dto/tokens.dto';
 
 @ApiTags('Auth')
@@ -25,15 +30,22 @@ export class AuthController {
     description: 'Success',
     type: SignupResponseDto,
   })
-  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Bad Request' })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user with the same login or phone has been deleted',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'phone or login already in use',
+  })
   @Public()
   @Post('signup')
   async signup(
     @Body() signupData: SignupDto,
-    @Req() req: Request,
+    @Headers('user-agent') userAgent: string,
     @Ip() ip: string,
   ): Promise<SignupResponseDto> {
-    return this.authService.signup(signupData, req, ip);
+    return this.authService.signup(signupData, userAgent, ip);
   }
 
   @ApiParam({
@@ -58,10 +70,10 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() loginData: LoginDto,
-    @Req() req: Request,
+    @Headers('user-agent') userAgent: string,
     @Ip() ip: string,
   ): Promise<LoginResponseDto> {
-    return this.authService.login(loginData, req, ip);
+    return this.authService.login(loginData, userAgent, ip);
   }
 
   @ApiParam({
@@ -82,12 +94,12 @@ export class AuthController {
   @Post('refresh')
   async refreshTokens(
     @Body() refreshTokenDto: RefreshTokenDto,
-    @Req() req: Request,
+    @Headers('user-agent') userAgent: string,
     @Ip() ip: string,
   ): Promise<TokensDto> {
     return this.authService.refreshTokens(
       refreshTokenDto.refreshToken,
-      req,
+      userAgent,
       ip,
     );
   }

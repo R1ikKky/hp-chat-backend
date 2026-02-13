@@ -6,6 +6,8 @@ import {
   Matches,
   MinLength,
 } from 'class-validator';
+import { UserDto } from '../../common/dtos/user-public.dto';
+import { TokensDto } from './tokens.dto';
 
 export class SignupDto {
   @ApiProperty({ nullable: false })
@@ -27,4 +29,9 @@ export class SignupDto {
   @ApiProperty({ nullable: false })
   @IsString()
   bio!: string;
+}
+
+export class SignupResponseDto {
+  user!: UserDto;
+  tokens!: TokensDto;
 }

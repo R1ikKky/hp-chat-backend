@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import type { CustomRequest } from '../../common/interfaces/customRequest.interface';
 import { Public } from '../../common/decorators/public.decorator';
 import { RecoverUserDto } from './dto/recover-user.dto';
 import { RecreateUserDto } from './dto/recreate-user.dto';
@@ -21,6 +20,7 @@ import { RoleEnum } from '../../common/enums/role.enum';
 import { GiveAdminDto } from './dto/give-admin.dto';
 import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserDto } from '../../common/dtos/user-public.dto';
+import { UserId } from '../../common/decorators/user-id.decorator';
 
 @ApiTags('Users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -36,8 +36,7 @@ export class UsersController {
 
   @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: UserDto })
   @Get('me')
-  async getOne(@Req() req: CustomRequest): Promise<UserDto | null> {
-    const userId = req.userId;
+  async getOne(@UserId() userId: string): Promise<UserDto | null> {
     return this.usersService.findUserById(userId);
   }
 
@@ -61,10 +60,9 @@ export class UsersController {
   })
   @Patch('update-me')
   async updateOne(
-    @Req() req: CustomRequest,
+    @UserId() userId: string,
     @Body() updateData: UpdateUserDto,
   ): Promise<string> {
-    const userId = req.userId;
     return this.usersService.updateUser(userId, updateData);
   }
 
@@ -78,8 +76,7 @@ export class UsersController {
     description: 'user not found',
   })
   @Delete('delete-me')
-  async deleteMe(@Req() req: CustomRequest): Promise<string> {
-    const userId = req.userId;
+  async deleteMe(@UserId() userId: string): Promise<string> {
     return this.usersService.deleteUser(userId);
   }
 
@@ -108,7 +105,7 @@ export class UsersController {
     required: true,
     type: RecreateUserDto,
   })
-    @ApiResponse({
+  @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
     type: UserDto,
@@ -117,7 +114,7 @@ export class UsersController {
     status: HttpStatus.BAD_REQUEST,
     description: 'user not found',
   })
-    @ApiResponse({
+  @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     description: 'user already exists',
   })
@@ -149,10 +146,10 @@ export class UsersController {
     required: true,
     type: 'uuid',
   })
-    @ApiResponse({
+  @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
-    type: "string",
+    type: 'string',
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -169,18 +166,18 @@ export class UsersController {
     required: true,
     type: GiveAdminDto,
   })
-      @ApiResponse({
+  @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
-    type: "string",
+    type: 'string',
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     description: 'user not found',
   })
-   @ApiResponse({
+  @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: 'user <recieved userId> is already admin'
+    description: 'user <recieved userId> is already admin',
   })
   @Post('give-admin')
   @Roles(RoleEnum.ADMIN)

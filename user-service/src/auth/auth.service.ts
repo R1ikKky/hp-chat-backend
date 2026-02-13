@@ -4,18 +4,15 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { LoginDto } from './dto/login.dto';
+import { LoginDto, LoginResponseDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
-import { SignupDto } from './dto/signup.dto';
+import { SignupDto, SignupResponseDto } from './dto/signup.dto';
 import { IUsersRepository } from '../features/users/dto/users-repository.interface';
 import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
 import { IRefreshTokenRepository } from './dto/refresh-token-repository.interface';
 import { LogoutDto } from './dto/logout.dto';
 import { RoleEnum } from '../common/enums/role.enum';
 import { DataSource } from 'typeorm';
-import { SignupResponseDto } from './dto/signup-response.dto';
-import { LoginResponseDto } from './dto/login-response.dto';
 import { TokensDto } from './dto/tokens.dto';
 
 @Injectable()
@@ -29,28 +26,22 @@ export class AuthService {
 
   async signup(
     signupData: SignupDto,
-    req: Request,
+    userAgent: string,
     ip: string,
   ): Promise<SignupResponseDto> {
     const { login, phone, password, age, bio } = signupData;
 
-    const userAgent = req.headers['user-agent'];
+    const phoneOrLoginInUse =
+      await this.userRepository.findUserByPhoneOrLoginWithDeleted(phone, login);
 
-    const phoneInUse =
-      await this.userRepository.findUserByPhoneWithDeleted(phone);
-    const loginInUse =
-      await this.userRepository.findUserByLoginWithDeleted(login);
-
-    if (phoneInUse && phoneInUse.deletedAt)
+    if (phoneOrLoginInUse && phoneOrLoginInUse.deletedAt) {
       throw new BadRequestException(
-        'user with the same phone number has been deleted',
+        'user with the same login or phone has been deleted',
       );
-    if (phoneInUse) throw new BadRequestException('phone already in use');
-    if (loginInUse && loginInUse.deletedAt)
-      throw new BadRequestException(
-        'user with the same login has been deleted',
-      );
-    if (loginInUse) throw new BadRequestException('login already in use');
+    }
+    if (phoneOrLoginInUse) {
+      throw new BadRequestException('phone or login already in use');
+    }
 
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -75,13 +66,10 @@ export class AuthService {
   }
 
   async login(
-    loginDto: LoginDto,
-    req: Request,
+    { phone, password }: LoginDto,
+    userAgent: string,
     ip: string,
   ): Promise<LoginResponseDto> {
-    const { phone, password } = loginDto;
-    const userAgent = req.headers['user-agent'];
-
     const user = await this.userRepository.findUserByPhoneWithDeleted(phone);
     if (!user) throw new UnauthorizedException('wrong credentials');
 
@@ -107,18 +95,15 @@ export class AuthService {
     };
   }
 
-  async logout(logoutData: LogoutDto): Promise<string> {
-    return this.refreshTokenRepository.deleteRefreshToken(
-      logoutData.refreshToken,
-    );
+  async logout({ refreshToken }: LogoutDto): Promise<string> {
+    return this.refreshTokenRepository.deleteRefreshToken(refreshToken);
   }
 
   async refreshTokens(
     refreshToken: string,
-    req: Request,
+    userAgent: string,
     ip: string,
   ): Promise<TokensDto> {
-    const userAgent = req.headers['user-agent'];
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.startTransaction();
 
@@ -148,8 +133,8 @@ export class AuthService {
     userAgent: string,
     ip: string,
   ): Promise<TokensDto> {
-    const accessToken = this.jwtService.sign({ userId, userRole });
-    const refreshToken = uuidv4();
+    const accessToken = this.jwtService.sign({ userId, userRole }, { expiresIn: '15m' });
+    const refreshToken = this.jwtService.sign({ userId }, { expiresIn: '90d' })
 
     await this.saveRefreshToken(refreshToken, userId, userAgent, ip);
 

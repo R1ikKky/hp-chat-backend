@@ -72,6 +72,16 @@ export class UsersRepository
     });
   }
 
+  async findUserByPhoneOrLoginWithDeleted(
+    phone: string,
+    login: string,
+  ): Promise<UsersEntity | null> {
+    return this.usersRepository().findOne({
+      withDeleted: true,
+      where: [{ phone }, { login }],
+    });
+  }
+
   async createOneUser(createUserData: CreateUserDto): Promise<UsersEntity> {
     return this.usersRepository().save(createUserData);
   }
@@ -127,12 +137,11 @@ export class UsersRepository
       const newUser = this.usersRepository().save(recreateUserData);
       return newUser;
     } else {
-      throw new NotImplementedException("couldnt delete user");
+      throw new NotImplementedException('couldnt delete user');
     }
   }
 
-  async recoverUser(recoverUserData: RecoverUserDto): Promise<string> {
-    const phone = recoverUserData.phone;
+  async recoverUser({ phone }: RecoverUserDto): Promise<string> {
     const user = await this.usersRepository().findOne({
       withDeleted: true,
       where: { phone },
@@ -161,8 +170,11 @@ export class UsersRepository
     }
   }
 
-  async giveAdmin(giveAdminData: GiveAdminDto): Promise<string> {
-    const updateRelust = await this.usersRepository().update({ id: giveAdminData.newAdminId }, { role: RoleEnum.ADMIN });
+  async giveAdmin({ newAdminId }: GiveAdminDto): Promise<string> {
+    const updateRelust = await this.usersRepository().update(
+      { id: newAdminId },
+      { role: RoleEnum.ADMIN },
+    );
     if (updateRelust.affected) {
       return `update completed, updated colums: ${updateRelust.affected}`;
     }

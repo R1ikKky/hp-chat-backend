@@ -4,7 +4,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { IUsersRepository } from './dto/users-repository.interface';
-import { UsersEntity } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { IRefreshTokenRepository } from '../../auth/dto/refresh-token-repository.interface';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -30,7 +29,7 @@ export class UsersService {
     return this.userRepository.findUserById(userId);
   }
 
-  async createUser(createUserData: CreateUserDto): Promise<UsersEntity | null> {
+  async createUser(createUserData: CreateUserDto): Promise<UserDto | null> {
     return this.userRepository.createOneUser(createUserData);
   }
 

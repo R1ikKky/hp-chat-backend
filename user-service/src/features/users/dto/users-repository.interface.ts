@@ -13,6 +13,7 @@ export abstract class IUsersRepository {
     abstract findUserByPhoneWithDeleted(phone: string): Promise<UsersEntity | null>
     abstract findUserByLogin(login: string): Promise<UsersEntity | null>;
     abstract findUserByLoginWithDeleted(login: string): Promise<UsersEntity | null>;
+    abstract findUserByPhoneOrLoginWithDeleted(phone: string, login: string): Promise<UsersEntity | null>
     abstract createOneUser(createUserData: CreateUserDto): Promise<UsersEntity>
     abstract updateUser(userId: string, updateUserData: UpdateUserDto): Promise<string>
     abstract deleteOneUserById(userId: string): Promise<string>

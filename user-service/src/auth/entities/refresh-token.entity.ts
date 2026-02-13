@@ -13,7 +13,7 @@ export class refreshTokenEntity {
     @JoinColumn({ name: "userId" })
     user!: UsersEntity;
 
-    @Column({ type: "uuid" })
+    @Column({ type: "text" })
     refreshToken!: string;
 
     @Column({ type: "varchar", length: 200 })
