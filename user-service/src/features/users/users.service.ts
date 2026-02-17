@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { IUsersRepository } from './dto/users-repository.interface';
 import { CreateUserDto } from './dto/create-user.dto';
 import { IRefreshTokenRepository } from '../../auth/dto/refresh-token-repository.interface';
@@ -55,14 +51,13 @@ export class UsersService {
     const user = await this.userRepository.findUserByPhoneWithDeleted(
       recoverUserData.phone,
     );
-    if (!user)
-      throw new BadRequestException('user not found');
+    if (!user) throw new BadRequestException('user not found');
 
     return this.userRepository.recoverUser(recoverUserData);
   }
 
   async recreateUser(recreateUserData: RecreateUserDto): Promise<UserDto> {
-    const { login, phone, password, age, bio } = recreateUserData;
+    const { login, phone, age, bio } = recreateUserData;
     //add number verification
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(recreateUserData.password, salt);

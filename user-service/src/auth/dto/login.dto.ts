@@ -11,7 +11,7 @@ export class LoginDto {
 }
 
 export class LoginResponseDto {
-    accessToken!: string;
-    refreshToken!: string;
-    userId!: string;
+  accessToken!: string;
+  refreshToken!: string;
+  userId!: string;
 }

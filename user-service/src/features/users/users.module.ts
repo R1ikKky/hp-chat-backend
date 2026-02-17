@@ -10,9 +10,17 @@ import { AuthGuard } from '../../guards/auth.guard';
 import { refreshTokenRepositoryProvider } from '../../auth/dto/refresh-token-repository.provider';
 
 @Module({
-  imports: [ProvidersModule, TypeOrmModule.forFeature([UsersEntity, refreshTokenEntity])],
-  providers: [UsersService, usersRepositoryProvider,refreshTokenRepositoryProvider, AuthGuard],
+  imports: [
+    ProvidersModule,
+    TypeOrmModule.forFeature([UsersEntity, refreshTokenEntity]),
+  ],
+  providers: [
+    UsersService,
+    usersRepositoryProvider,
+    refreshTokenRepositoryProvider,
+    AuthGuard,
+  ],
   controllers: [UsersController],
-  exports: [UsersService]
+  exports: [UsersService],
 })
 export class UsersModule {}

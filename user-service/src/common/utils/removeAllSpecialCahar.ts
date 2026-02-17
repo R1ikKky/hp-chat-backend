@@ -1,3 +1,3 @@
 export const normalizePhone = (input: string) => {
-  return input.replace(/[^0-9+]/g, "")
-}
+  return input.replace(/[^0-9+]/g, '');
+};

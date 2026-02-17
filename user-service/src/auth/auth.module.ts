@@ -10,14 +10,18 @@ import { refreshTokenRepositoryProvider } from './dto/refresh-token-repository.p
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, usersRepositoryProvider, refreshTokenRepositoryProvider],
+  providers: [
+    AuthService,
+    usersRepositoryProvider,
+    refreshTokenRepositoryProvider,
+  ],
   imports: [
     UsersModule,
     ProvidersModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (cfg) => ({  
-        secret: cfg.get('JWT_SECRET'),
+      useFactory: async (cfg: ConfigService) => ({
+        secret: await cfg.get('JWT_SECRET'),
       }),
       global: true,
       inject: [ConfigService],

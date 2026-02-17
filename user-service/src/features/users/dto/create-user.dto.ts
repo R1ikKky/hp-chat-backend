@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsPhoneNumber, IsString } from 'class-validator';
 
 export class CreateUserDto {
-  @ApiProperty({ description: "User unique identifier",nullable: false})
+  @ApiProperty({ description: 'User unique identifier', nullable: false })
   @IsString()
   login!: string;
   @ApiProperty({ nullable: false })

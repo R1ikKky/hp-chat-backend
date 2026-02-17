@@ -152,7 +152,7 @@ export class UsersRepository
     if (!user.deletedAt) {
       throw new BadRequestException('user already exists');
     }
-    this.usersRepository().restore({ phone });
+    await this.usersRepository().restore({ phone });
     return `user ${user.login} recovered`;
   }
 

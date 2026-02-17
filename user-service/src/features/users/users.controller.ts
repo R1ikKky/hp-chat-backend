@@ -7,7 +7,6 @@ import {
   HttpStatus,
   Patch,
   Post,
-  Req,
   UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';

@@ -121,7 +121,7 @@ export class AuthService {
       );
     } catch (e) {
       await queryRunner.rollbackTransaction();
-      throw new UnauthorizedException(`someting went wrong ${e}`);
+      throw new UnauthorizedException(`someting went wrong ${String(e)}`);
     } finally {
       await queryRunner.release();
     }
@@ -133,8 +133,11 @@ export class AuthService {
     userAgent: string,
     ip: string,
   ): Promise<TokensDto> {
-    const accessToken = this.jwtService.sign({ userId, userRole }, { expiresIn: '15m' });
-    const refreshToken = this.jwtService.sign({ userId }, { expiresIn: '90d' })
+    const accessToken = this.jwtService.sign(
+      { userId, userRole },
+      { expiresIn: '15m' },
+    );
+    const refreshToken = this.jwtService.sign({ userId }, { expiresIn: '90d' });
 
     await this.saveRefreshToken(refreshToken, userId, userAgent, ip);
 
