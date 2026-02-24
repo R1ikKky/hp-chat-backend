@@ -5,6 +5,7 @@ export abstract class IAvatarRepository {
     userId: string,
     avatarLink: string,
   ): Promise<AvatarEntity>;
-  abstract deleteAvatar(avatarLink: string): Promise<string>;
+  abstract deleteAvatar(avatarId: string): Promise<string>;
   abstract getAllAvatarsByUserId(userId: string): Promise<AvatarEntity[]>;
+  abstract getAvatarById(avatarId: string): Promise<AvatarEntity>;
 }

@@ -3,7 +3,7 @@ import { BaseRepository } from '../../common/repositories/base.repository';
 import { IAvatarRepository } from './avatar-repository.adapter';
 import { AvatarEntity } from './entities/avatar.entity';
 import { UploadException } from '../../providers/files/s3/exceptions/upload.exception';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class avatarRepository
@@ -37,9 +37,17 @@ export class avatarRepository
     }
   }
 
-  async deleteAvatar(avatarLink: string): Promise<string> {
-    const deletedAvatar = await this.avatarRepository().softDelete(avatarLink);
+  async deleteAvatar(avatarId: string): Promise<string> {
+    const deletedAvatar = await this.avatarRepository().softDelete(avatarId);
     if (!deletedAvatar.affected) return 'user not affected';
     return 'user affected';
+  }
+
+  async getAvatarById(avatarId: string): Promise<AvatarEntity> {
+    const avatar = await this.avatarRepository().findOne({
+      where: { id: avatarId },
+    });
+    if (!avatar) throw new BadRequestException('avatar not found');
+    return avatar;
   }
 }

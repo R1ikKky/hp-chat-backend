@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   HttpStatus,
   Post,
   UploadedFile,
@@ -13,6 +14,7 @@ import { UploadAvatarDto } from './dto/upload-avatar.dto';
 import type { IUploadedMulterFile } from '../../providers/files/s3/interfaces/upload-file.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AvatarEntity } from './entities/avatar.entity';
+import { DeleteAvatarDto } from './dto/delete-avatar.dto';
 
 @ApiTags('Avatar')
 @Controller('avatar')
@@ -31,9 +33,9 @@ export class AvatarController {
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: '',
+    description: 'you have reached maximum avatars count',
   })
-  @UseInterceptors(FileInterceptor('avatar'))
+  @UseInterceptors(FileInterceptor('photo'))
   @Post('upload-avatar')
   async uploadAvatar(
     @Body() uploadAvatarData: UploadAvatarDto,
@@ -41,5 +43,27 @@ export class AvatarController {
     @UserId() userId: string,
   ): Promise<AvatarEntity> {
     return this.avatarService.uploadAvatar(uploadAvatarData, file, userId);
+  }
+
+  @ApiParam({
+    name: 'deleteAvatarData',
+    required: true,
+    type: 'DeleteAvatarDto',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Success',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'avatar not found',
+  })
+  @Delete('delete-avatar')
+  async deleteAvatar(
+    @Body() deleteAvatarData: DeleteAvatarDto,
+    @UserId() userId: string,
+  ): Promise<string> {
+    return await this.avatarService.deleteAvatar(deleteAvatarData, userId);
   }
 }

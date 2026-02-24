@@ -4,6 +4,7 @@ import type { IUploadedMulterFile } from '../../providers/files/s3/interfaces/up
 import { IFileService } from '../../providers/files/files.adapter';
 import { IAvatarRepository } from './avatar-repository.adapter';
 import { AvatarEntity } from './entities/avatar.entity';
+import { DeleteAvatarDto } from './dto/delete-avatar.dto';
 
 @Injectable()
 export class AvatarService {
@@ -17,14 +18,30 @@ export class AvatarService {
     file: IUploadedMulterFile,
     userId: string,
   ): Promise<AvatarEntity> {
-    const storageResponse = await this.fileService.uploadFile({
-      file,
-      folder,
-      name: userId,
-    });
-    if (!storageResponse) {
-      throw new BadRequestException('i dont know bro');
+    const UserAvatars =
+      await this.avatarRepository.getAllAvatarsByUserId(userId);
+    if (UserAvatars.length < 5) {
+      const { path } = await this.fileService.uploadFile({
+        file,
+        folder,
+        name: userId,
+      });
+      return await this.avatarRepository.saveAvatar(userId, path);
     }
-    return await this.avatarRepository.saveAvatar(userId, storageResponse.path);
+    throw new BadRequestException('you have reached maximum avatars count');
+  }
+
+  async deleteAvatar(
+    { avatarId }: DeleteAvatarDto,
+    userId: string,
+  ): Promise<string> {
+    const { userId: userIdFromAvatarMetadata } =
+      await this.avatarRepository.getAvatarById(avatarId);
+    if (!(userId === userIdFromAvatarMetadata)) {
+      throw new BadRequestException(
+        'you dont have permissions to delete this avatar',
+      );
+    }
+    return await this.avatarRepository.deleteAvatar(avatarId);
   }
 }
