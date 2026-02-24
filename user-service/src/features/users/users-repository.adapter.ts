@@ -1,9 +1,9 @@
-import { UsersEntity } from '../entities/user.entity';
-import { CreateUserDto } from './create-user.dto';
-import { UpdateUserDto } from './update-user.dto';
-import { RecoverUserDto } from './recover-user.dto';
-import { RecreateUserDto } from './recreate-user.dto';
-import { GiveAdminDto } from './give-admin.dto';
+import { UsersEntity } from './entities/user.entity';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { RecoverUserDto } from './dto/recover-user.dto';
+import { RecreateUserDto } from './dto/recreate-user.dto';
+import { GiveAdminDto } from './dto/give-admin.dto';
 
 export abstract class IUsersRepository {
   abstract getAllExistingUsers(): Promise<UsersEntity[]>;

@@ -7,7 +7,7 @@ import {
 import { LoginDto, LoginResponseDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { SignupDto, SignupResponseDto } from './dto/signup.dto';
-import { IUsersRepository } from '../features/users/dto/users-repository.interface';
+import { IUsersRepository } from '../features/users/users-repository.adapter';
 import * as bcrypt from 'bcrypt';
 import { IRefreshTokenRepository } from './dto/refresh-token-repository.interface';
 import { LogoutDto } from './dto/logout.dto';

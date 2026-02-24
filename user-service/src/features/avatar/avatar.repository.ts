@@ -1,0 +1,45 @@
+import { DataSource, EntityManager, Repository } from 'typeorm';
+import { BaseRepository } from '../../common/repositories/base.repository';
+import { IAvatarRepository } from './avatar-repository.adapter';
+import { AvatarEntity } from './entities/avatar.entity';
+import { UploadException } from '../../providers/files/s3/exceptions/upload.exception';
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class avatarRepository
+  extends BaseRepository
+  implements IAvatarRepository
+{
+  constructor(dataSource: DataSource) {
+    super(dataSource);
+  }
+
+  private avatarRepository(
+    entityManager?: EntityManager,
+  ): Repository<AvatarEntity> {
+    return this.getRepository(AvatarEntity, entityManager);
+  }
+
+  async getAllAvatarsByUserId(userId: string): Promise<AvatarEntity[]> {
+    return await this.avatarRepository().find({ where: { userId } });
+  }
+
+  async saveAvatar(userId: string, avatarLink: string): Promise<AvatarEntity> {
+    try {
+      console.log(avatarLink);
+      return await this.avatarRepository().save({
+        userId,
+        avatarLink,
+        isActive: false,
+      });
+    } catch (e) {
+      throw new UploadException(`error occured: ${String(e)}`);
+    }
+  }
+
+  async deleteAvatar(avatarLink: string): Promise<string> {
+    const deletedAvatar = await this.avatarRepository().softDelete(avatarLink);
+    if (!deletedAvatar.affected) return 'user not affected';
+    return 'user affected';
+  }
+}

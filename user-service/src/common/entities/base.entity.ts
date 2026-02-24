@@ -10,7 +10,6 @@ export abstract class BaseEntity {
   id!: string;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
-  @Exclude()
   createdAt!: Date;
 
   @UpdateDateColumn({
@@ -18,6 +17,5 @@ export abstract class BaseEntity {
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  @Exclude()
   updatedAt!: Date;
 }

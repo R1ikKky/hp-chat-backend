@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { IUsersRepository } from './dto/users-repository.interface';
+import { IUsersRepository } from './users-repository.adapter';
 import { CreateUserDto } from './dto/create-user.dto';
 import { IRefreshTokenRepository } from '../../auth/dto/refresh-token-repository.interface';
 import { UpdateUserDto } from './dto/update-user.dto';

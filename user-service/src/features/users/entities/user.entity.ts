@@ -3,6 +3,7 @@ import { BaseEntity } from '../../../common/entities/base.entity';
 import { refreshTokenEntity } from '../../../auth/entities/refresh-token.entity';
 import { Exclude } from 'class-transformer';
 import { RoleEnum } from '../../../common/enums/role.enum';
+import { AvatarEntity } from '../../avatar/entities/avatar.entity';
 
 @Entity()
 export class UsersEntity extends BaseEntity {
@@ -28,6 +29,9 @@ export class UsersEntity extends BaseEntity {
   @DeleteDateColumn({ type: 'timestamptz' })
   deletedAt!: Date | null;
 
-  @OneToMany(() => refreshTokenEntity, (r) => r.userId)
+  @OneToMany(() => refreshTokenEntity, (r) => r.user)
   refreshTokens!: refreshTokenEntity[];
+
+  @OneToMany(() => AvatarEntity, (a) => a.user)
+  avatars!: AvatarEntity[];
 }

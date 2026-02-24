@@ -8,11 +8,12 @@ import { UsersEntity } from './entities/user.entity';
 import { refreshTokenEntity } from '../../auth/entities/refresh-token.entity';
 import { AuthGuard } from '../../guards/auth.guard';
 import { refreshTokenRepositoryProvider } from '../../auth/dto/refresh-token-repository.provider';
+import { AvatarEntity } from '../avatar/entities/avatar.entity';
 
 @Module({
   imports: [
     ProvidersModule,
-    TypeOrmModule.forFeature([UsersEntity, refreshTokenEntity]),
+    TypeOrmModule.forFeature([UsersEntity, refreshTokenEntity, AvatarEntity]),
   ],
   providers: [
     UsersService,

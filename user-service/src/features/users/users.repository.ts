@@ -2,11 +2,12 @@ import {
   BadRequestException,
   Injectable,
   NotImplementedException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { UsersEntity } from './entities/user.entity';
-import { IUsersRepository } from './dto/users-repository.interface';
+import { IUsersRepository } from './users-repository.adapter';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RecoverUserDto } from './dto/recover-user.dto';
@@ -30,12 +31,17 @@ export class UsersRepository
   }
 
   async getAllExistingUsers(): Promise<UsersEntity[]> {
-    return this.usersRepository().find();
+    try {
+      return this.usersRepository().find({ relations: { avatars: true } });
+    } catch (e) {
+      throw new UnprocessableEntityException(`good luck: ${String(e)}`);
+    }
   }
 
   async findUserById(userId: string): Promise<UsersEntity | null> {
     return this.usersRepository().findOne({
       where: { id: userId },
+      relations: { avatars: true },
     });
   }
 
