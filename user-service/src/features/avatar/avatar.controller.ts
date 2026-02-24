@@ -15,6 +15,7 @@ import type { IUploadedMulterFile } from '../../providers/files/s3/interfaces/up
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AvatarEntity } from './entities/avatar.entity';
 import { DeleteAvatarDto } from './dto/delete-avatar.dto';
+import { imageFileFilter } from '../../common/utils/imageFileFilter';
 
 @ApiTags('Avatar')
 @Controller('avatar')
@@ -35,7 +36,14 @@ export class AvatarController {
     status: HttpStatus.BAD_REQUEST,
     description: 'you have reached maximum avatars count',
   })
-  @UseInterceptors(FileInterceptor('photo'))
+  @UseInterceptors(
+    FileInterceptor('photo', {
+      limits: {
+        fileSize: 1000 * 1000 * 10,
+      },
+      fileFilter: imageFileFilter,
+    }),
+  )
   @Post('upload-avatar')
   async uploadAvatar(
     @Body() uploadAvatarData: UploadAvatarDto,
@@ -57,7 +65,7 @@ export class AvatarController {
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: 'avatar not found',
+    description: 'you dont have permissions to delete this avatar',
   })
   @Delete('delete-avatar')
   async deleteAvatar(
