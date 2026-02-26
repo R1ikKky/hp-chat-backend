@@ -50,4 +50,20 @@ export class avatarRepository
     if (!avatar) throw new BadRequestException('avatar not found');
     return avatar;
   }
+
+  async findGroupByIds(userIds: string[]): Promise<AvatarEntity[]> {
+    return await this.avatarRepository()
+      .createQueryBuilder('a')
+      .where('a.userId IN (:...userIds)', { userIds })
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('MAX(sub.createdAt)')
+          .from(AvatarEntity, 'sub')
+          .where('sub.userId = a.userId')
+          .getQuery();
+        return `a.createdAt = ${subQuery}`;
+      })
+      .getMany();
+  }
 }

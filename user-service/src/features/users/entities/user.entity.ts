@@ -27,6 +27,7 @@ export class UsersEntity extends BaseEntity {
   role!: RoleEnum;
 
   @DeleteDateColumn({ type: 'timestamptz' })
+  @Exclude()
   deletedAt!: Date | null;
 
   @OneToMany(() => refreshTokenEntity, (r) => r.user)

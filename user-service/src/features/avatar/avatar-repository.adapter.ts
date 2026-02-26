@@ -8,4 +8,5 @@ export abstract class IAvatarRepository {
   abstract deleteAvatar(avatarId: string): Promise<string>;
   abstract getAllAvatarsByUserId(userId: string): Promise<AvatarEntity[]>;
   abstract getAvatarById(avatarId: string): Promise<AvatarEntity>;
+  abstract findGroupByIds(userIds: string[]): Promise<AvatarEntity[]>;
 }

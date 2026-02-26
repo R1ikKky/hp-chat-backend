@@ -9,6 +9,7 @@ import { refreshTokenEntity } from '../../auth/entities/refresh-token.entity';
 import { AuthGuard } from '../../guards/auth.guard';
 import { refreshTokenRepositoryProvider } from '../../auth/dto/refresh-token-repository.provider';
 import { AvatarEntity } from '../avatar/entities/avatar.entity';
+import { avatarRepositoryProvider } from '../avatar/dto/avatar-repository.provider';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AvatarEntity } from '../avatar/entities/avatar.entity';
     UsersService,
     usersRepositoryProvider,
     refreshTokenRepositoryProvider,
+    avatarRepositoryProvider,
     AuthGuard,
   ],
   controllers: [UsersController],

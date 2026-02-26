@@ -9,12 +9,15 @@ import * as bcrypt from 'bcrypt';
 import { GiveAdminDto } from './dto/give-admin.dto';
 import { RoleEnum } from '../../common/enums/role.enum';
 import { UserDto } from '../../common/dtos/user-public.dto';
+import { GetActiveUsersDto } from './dto/get-active-users.dto';
+import { IAvatarRepository } from '../avatar/avatar-repository.adapter';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly userRepository: IUsersRepository,
     private readonly refreshTokenRepository: IRefreshTokenRepository,
+    private readonly avatarRepository: IAvatarRepository,
   ) {}
 
   getAllExistingUsers(): Promise<UserDto[]> {
@@ -64,6 +67,25 @@ export class UsersService {
 
     recreateUserData = { login, phone, password: hashedPassword, age, bio };
     return this.userRepository.recreateUser(recreateUserData);
+  }
+
+  async getActiveUsers({
+    min_age,
+    max_age,
+  }: GetActiveUsersDto): Promise<UserDto[]> {
+    const activeUsers = await this.userRepository.getActiveUsers(
+      min_age,
+      max_age,
+    );
+    const userIds = activeUsers.map((u) => u.id);
+
+    const avatars = await this.avatarRepository.findGroupByIds(userIds);
+    console.log(activeUsers, avatars);
+
+    return activeUsers.map((user) => ({
+      ...user,
+      avatar: avatars.find((a) => a.userId === user.id),
+    }));
   }
 
   //admin method

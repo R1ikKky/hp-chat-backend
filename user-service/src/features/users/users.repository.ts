@@ -14,6 +14,7 @@ import { RecoverUserDto } from './dto/recover-user.dto';
 import { RecreateUserDto } from './dto/recreate-user.dto';
 import { RoleEnum } from '../../common/enums/role.enum';
 import { GiveAdminDto } from './dto/give-admin.dto';
+import { AvatarEntity } from '../avatar/entities/avatar.entity';
 
 @Injectable()
 export class UsersRepository
@@ -160,6 +161,25 @@ export class UsersRepository
     }
     await this.usersRepository().restore({ phone });
     return `user ${user.login} recovered`;
+  }
+
+  async getActiveUsers(
+    min_age: number,
+    max_age: number,
+  ): Promise<UsersEntity[]> {
+    return this.usersRepository()
+      .createQueryBuilder('u')
+      .where('u.age > :min_age AND u.age < :max_age', { min_age, max_age })
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('COUNT(a.id)')
+          .from(AvatarEntity, 'a')
+          .where('a.userId = u.id')
+          .getQuery();
+        return `(${subQuery}) > 2`;
+      })
+      .getMany();
   }
 
   async getAllUsers(): Promise<UsersEntity[]> {

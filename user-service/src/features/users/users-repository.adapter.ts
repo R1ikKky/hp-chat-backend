@@ -31,6 +31,10 @@ export abstract class IUsersRepository {
     recreateUserData: RecreateUserDto,
   ): Promise<UsersEntity>;
   abstract recoverUser(recoverUserData: RecoverUserDto): Promise<string>;
+  abstract getActiveUsers(
+    min_age: number,
+    max_age: number,
+  ): Promise<UsersEntity[]>;
   abstract getAllUsers(): Promise<UsersEntity[]>;
   abstract deleteOneUserByIdHard(userId: string): Promise<string>;
   abstract giveAdmin(giveAdminData: GiveAdminDto): Promise<string>;

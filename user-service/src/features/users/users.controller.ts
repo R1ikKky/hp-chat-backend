@@ -20,6 +20,7 @@ import { GiveAdminDto } from './dto/give-admin.dto';
 import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserDto } from '../../common/dtos/user-public.dto';
 import { UserId } from '../../common/decorators/user-id.decorator';
+import { GetActiveUsersDto } from './dto/get-active-users.dto';
 
 @ApiTags('Users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -182,5 +183,22 @@ export class UsersController {
   @Roles(RoleEnum.ADMIN)
   async giveAdmin(@Body() giveAdminData: GiveAdminDto): Promise<string> {
     return this.usersService.giveAdmin(giveAdminData);
+  }
+
+  @ApiParam({
+    name: 'getActiveUsersData',
+    required: true,
+    type: 'GetActiveUsersDto',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Success',
+    type: 'string',
+  })
+  @Get('get-active-users')
+  async getActiveUsers(
+    @Body() getActiveUsersData: GetActiveUsersDto,
+  ): Promise<UserDto[]> {
+    return this.usersService.getActiveUsers(getActiveUsersData);
   }
 }

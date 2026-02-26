@@ -31,7 +31,6 @@ export class RefreshTokenRepository
     ip: string,
     expiresIn: Date,
   ): Promise<refreshTokenEntity> {
-    console.log('im here');
     return this.refreshTokenRepository().save({
       refreshToken,
       userId,
