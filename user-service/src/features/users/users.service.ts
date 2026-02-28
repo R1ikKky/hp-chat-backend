@@ -11,6 +11,7 @@ import { RoleEnum } from '../../common/enums/role.enum';
 import { UserDto } from '../../common/dtos/user-public.dto';
 import { GetActiveUsersDto } from './dto/get-active-users.dto';
 import { IAvatarRepository } from '../avatar/avatar-repository.adapter';
+import { RedisService } from '../../providers/databases/redis/redis.service';
 
 @Injectable()
 export class UsersService {
@@ -18,21 +19,44 @@ export class UsersService {
     private readonly userRepository: IUsersRepository,
     private readonly refreshTokenRepository: IRefreshTokenRepository,
     private readonly avatarRepository: IAvatarRepository,
+    private readonly redisService: RedisService,
   ) {}
 
-  getAllExistingUsers(): Promise<UserDto[]> {
-    return this.userRepository.getAllExistingUsers();
+  async getAllExistingUsers(): Promise<UserDto[]> {
+    const cachedKey = 'users:all';
+    const cached = await this.redisService.get<UserDto[]>(cachedKey);
+    if (cached) {
+      return cached;
+    }
+
+    const users = await this.userRepository.getAllExistingUsers();
+    await this.redisService.set(cachedKey, users, 30);
+    return users;
   }
 
-  findUserById(userId: string): Promise<UserDto | null> {
-    return this.userRepository.findUserById(userId);
+  async findUserById(userId: string): Promise<UserDto | null> {
+    const cachedKey = `users:${userId}`;
+    const cached = await this.redisService.get<UserDto | null>(cachedKey);
+    if (cached) {
+      return cached;
+    }
+
+    const user = await this.userRepository.findUserById(userId);
+    await this.redisService.set(cachedKey, user, 30);
+    return user;
   }
 
   async createUser(createUserData: CreateUserDto): Promise<UserDto | null> {
+    await this.redisService.del('users:all');
+
     return this.userRepository.createOneUser(createUserData);
   }
 
   async updateUser(userId: string, updateData: UpdateUserDto): Promise<string> {
+    const cachedKey = `users:${userId}`;
+    await this.redisService.del(cachedKey);
+    await this.redisService.del('users:all');
+
     const user = await this.userRepository.findUserByIdWithDeleted(userId);
     if (!user || user.deletedAt)
       throw new BadRequestException('user not found');
@@ -40,6 +64,10 @@ export class UsersService {
   }
 
   async deleteUser(userId: string): Promise<string> {
+    const cachedKey = `users:${userId}`;
+    await this.redisService.del(cachedKey);
+    await this.redisService.del('users:all');
+
     const user = await this.userRepository.findUserByIdWithDeleted(userId);
     if (!user || user.deletedAt)
       throw new BadRequestException('user not found');
@@ -50,6 +78,8 @@ export class UsersService {
   }
 
   async recoverUser(recoverUserData: RecoverUserDto): Promise<string> {
+    await this.redisService.del('users:all');
+
     //add number verification
     const user = await this.userRepository.findUserByPhoneWithDeleted(
       recoverUserData.phone,
@@ -60,6 +90,8 @@ export class UsersService {
   }
 
   async recreateUser(recreateUserData: RecreateUserDto): Promise<UserDto> {
+    await this.redisService.del('users:all');
+
     const { login, phone, age, bio } = recreateUserData;
     //add number verification
     const salt = await bcrypt.genSalt();
@@ -95,6 +127,9 @@ export class UsersService {
 
   //admin method
   async deleteUserHard(userId: string): Promise<string> {
+    const cachedKey = `users:${userId}`;
+    await this.redisService.del(cachedKey);
+
     const user = await this.userRepository.findUserByIdWithDeleted(userId);
     if (!user) throw new BadRequestException('user not found');
     if (user.deletedAt) Logger.warn('user was already softly deleted');
