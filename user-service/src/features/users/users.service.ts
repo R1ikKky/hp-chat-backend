@@ -12,6 +12,10 @@ import { UserDto } from '../../common/dtos/user-public.dto';
 import { GetActiveUsersDto } from './dto/get-active-users.dto';
 import { IAvatarRepository } from '../avatar/avatar-repository.adapter';
 import { RedisService } from '../../providers/databases/redis/redis.service';
+import { IncreaseBalanceDto } from './dto/increase-balance.dto';
+import { DecreaseBalanceDto } from './dto/decrease-balance.dto';
+import { TransferMoneyDto } from './dto/transfer-money.dto';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +24,7 @@ export class UsersService {
     private readonly refreshTokenRepository: IRefreshTokenRepository,
     private readonly avatarRepository: IAvatarRepository,
     private readonly redisService: RedisService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getAllExistingUsers(): Promise<UserDto[]> {
@@ -150,5 +155,43 @@ export class UsersService {
         `user '${giveAdminData.newAdminId}' is already admin`,
       );
     return this.userRepository.giveAdmin(giveAdminData);
+  }
+
+  async increaseBalance(
+    { amount }: IncreaseBalanceDto,
+    userId: string,
+  ): Promise<string> {
+    return await this.userRepository.increaseBalance(userId, amount);
+  }
+
+  async decreaseBalance(
+    { amount }: DecreaseBalanceDto,
+    userId: string,
+  ): Promise<string> {
+    return await this.userRepository.decreaseBalance(userId, amount);
+  }
+
+  async transferMoney(
+    { amount, recieverId }: TransferMoneyDto,
+    senderId: string,
+  ): Promise<string> {
+    if (senderId === recieverId) {
+      throw new BadRequestException('self transfers not allowed');
+    }
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.startTransaction();
+
+    try {
+      await this.userRepository.decreaseBalance(senderId, amount);
+      await this.userRepository.increaseBalance(recieverId, amount);
+
+      await queryRunner.commitTransaction();
+      return `transfer from ${senderId} to ${recieverId} executed`;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException(`transfer failed: ${String(error)}`);
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

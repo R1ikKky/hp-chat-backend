@@ -38,4 +38,6 @@ export abstract class IUsersRepository {
   abstract getAllUsers(): Promise<UsersEntity[]>;
   abstract deleteOneUserByIdHard(userId: string): Promise<string>;
   abstract giveAdmin(giveAdminData: GiveAdminDto): Promise<string>;
+  abstract increaseBalance(userId: string, amount: number): Promise<string>;
+  abstract decreaseBalance(userId: string, amount: number): Promise<string>;
 }

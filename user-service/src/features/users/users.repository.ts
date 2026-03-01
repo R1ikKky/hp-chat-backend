@@ -206,4 +206,35 @@ export class UsersRepository
     }
     throw new BadRequestException();
   }
+
+  async increaseBalance(userId: string, amount: number): Promise<string> {
+    const updated = await this.usersRepository()
+      .createQueryBuilder()
+      .update(UsersEntity)
+      .set({ balance: () => 'balance + :amount' })
+      .setParameters({ amount })
+      .where('id = :userId', { userId })
+      .execute();
+    if (!updated.affected) {
+      throw new BadRequestException('user not found');
+    }
+    return 'balance updated';
+  }
+
+  async decreaseBalance(userId: string, amount: number): Promise<string> {
+    const updated = await this.usersRepository()
+      .createQueryBuilder()
+      .update(UsersEntity)
+      .set({ balance: () => 'balance - :amount' })
+      .setParameters({ amount })
+      .where('id = :userId', { userId })
+      .andWhere('balance >= :amount', { amount })
+      .execute();
+    if (!updated.affected) {
+      throw new BadRequestException(
+        'user not found or dont have enougth money',
+      );
+    }
+    return 'balance updated';
+  }
 }

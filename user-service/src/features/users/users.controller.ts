@@ -21,6 +21,9 @@ import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserDto } from '../../common/dtos/user-public.dto';
 import { UserId } from '../../common/decorators/user-id.decorator';
 import { GetActiveUsersDto } from './dto/get-active-users.dto';
+import { IncreaseBalanceDto } from './dto/increase-balance.dto';
+import { DecreaseBalanceDto } from './dto/decrease-balance.dto';
+import { TransferMoneyDto } from './dto/transfer-money.dto';
 
 @ApiTags('Users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -200,5 +203,78 @@ export class UsersController {
     @Body() getActiveUsersData: GetActiveUsersDto,
   ): Promise<UserDto[]> {
     return this.usersService.getActiveUsers(getActiveUsersData);
+  }
+
+  @ApiParam({
+    name: 'increaseBalanceData',
+    required: true,
+    type: 'IncreaseBalanceDto',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'balance updated',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user not found',
+  })
+  @Post('increase-my-balance')
+  @Roles(RoleEnum.ADMIN)
+  async increaseBalance(
+    @Body() increaseBalanceData: IncreaseBalanceDto,
+    @UserId() userId: string,
+  ): Promise<string> {
+    return this.usersService.increaseBalance(increaseBalanceData, userId);
+  }
+
+  @ApiParam({
+    name: 'decreaseBalanceData',
+    required: true,
+    type: 'DecreaseBalanceDto',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'balance updated',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user not found or dont have enougth money',
+  })
+  @Post('decrease-my-balance')
+  @Roles(RoleEnum.ADMIN)
+  async decreaseBalance(
+    @Body() decreaseBalanceData: DecreaseBalanceDto,
+    @UserId() userId: string,
+  ): Promise<string> {
+    return this.usersService.decreaseBalance(decreaseBalanceData, userId);
+  }
+
+  @ApiParam({
+    name: 'transferMoneyData',
+    required: true,
+    type: 'TransferMoneyDto',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'transfer from <senderId> to <recieverId> executed',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'transfer failed: user not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'transfer failed: user not found or dont have enougth money',
+  })
+  @Post('transfer-money')
+  @Roles(RoleEnum.ADMIN)
+  async TransferMoney(
+    @Body() transferMoneyData: TransferMoneyDto,
+    @UserId() senderId: string,
+  ): Promise<string> {
+    return this.usersService.transferMoney(transferMoneyData, senderId);
   }
 }
