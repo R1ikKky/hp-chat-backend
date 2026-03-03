@@ -26,7 +26,6 @@ export class avatarRepository
 
   async saveAvatar(userId: string, avatarLink: string): Promise<AvatarEntity> {
     try {
-      console.log(avatarLink);
       return await this.avatarRepository().save({
         userId,
         avatarLink,

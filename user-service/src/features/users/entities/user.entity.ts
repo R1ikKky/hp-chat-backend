@@ -23,7 +23,7 @@ export class UsersEntity extends BaseEntity {
   @Column({ type: 'text' })
   bio!: string;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'decimal', default: 0, scale: 2 })
   balance!: number;
 
   @Column({ type: 'enum', enum: RoleEnum, default: RoleEnum.REGULARUSER })

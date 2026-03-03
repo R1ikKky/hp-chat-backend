@@ -237,4 +237,10 @@ export class UsersRepository
     }
     return 'balance updated';
   }
+
+  async resetBalance(): Promise<string> {
+    const updated = await this.usersRepository().updateAll({ balance: 0 });
+    if (!updated) throw new BadRequestException('something went wrong');
+    return 'done';
+  }
 }

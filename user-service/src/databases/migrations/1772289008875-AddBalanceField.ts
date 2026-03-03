@@ -5,7 +5,7 @@ export class AddBalanceField1772289008875 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE "users_entity" ADD "balance" integer NOT NULL DEFAULT '0'`,
+      `ALTER TABLE "users_entity" ADD "balance" numeric NOT NULL DEFAULT '0'`,
     );
   }
 

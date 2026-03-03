@@ -117,7 +117,6 @@ export class UsersService {
     const userIds = activeUsers.map((u) => u.id);
 
     const avatars = await this.avatarRepository.findGroupByIds(userIds);
-    console.log(activeUsers, avatars);
 
     return activeUsers.map((user) => ({
       ...user,

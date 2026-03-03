@@ -40,4 +40,5 @@ export abstract class IUsersRepository {
   abstract giveAdmin(giveAdminData: GiveAdminDto): Promise<string>;
   abstract increaseBalance(userId: string, amount: number): Promise<string>;
   abstract decreaseBalance(userId: string, amount: number): Promise<string>;
+  abstract resetBalance(): Promise<string>;
 }
