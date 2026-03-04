@@ -10,7 +10,7 @@ import {
   UploadFileResultDto,
 } from './dto/upload-file-payload.dto';
 import { RemoveFilePayloadDto } from './dto/remove-file-payload.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class S3Service extends IFileService {
@@ -23,7 +23,7 @@ export class S3Service extends IFileService {
 
   async uploadFile(dto: UploadFilePayloadDto): Promise<UploadFileResultDto> {
     const { folder, file, name } = dto;
-    const fileId = uuidv4();
+    const fileId = randomUUID();
     const path = `${folder}/${name}/${fileId}`;
 
     this.logger.log('📁 Beginning of uploading file to bucket');
