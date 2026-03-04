@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { BaseRepository } from '../common/repositories/base.repository';
-import { IRefreshTokenRepository } from './dto/refresh-token-repository.interface';
+import { IRefreshTokenRepository } from './refresh-token-repository.adapter';
 import {
   DataSource,
+  DeleteResult,
   EntityManager,
   MoreThanOrEqual,
   Repository,
 } from 'typeorm';
-import { refreshTokenEntity } from './entities/refresh-token.entity';
+import { RefreshTokenEntity } from './entities/refresh-token.entity';
 
 @Injectable()
 export class RefreshTokenRepository
@@ -20,8 +21,8 @@ export class RefreshTokenRepository
 
   private refreshTokenRepository(
     entityManager?: EntityManager,
-  ): Repository<refreshTokenEntity> {
-    return this.getRepository(refreshTokenEntity, entityManager);
+  ): Repository<RefreshTokenEntity> {
+    return this.getRepository(RefreshTokenEntity, entityManager);
   }
 
   saveRefreshToken(
@@ -30,7 +31,7 @@ export class RefreshTokenRepository
     userAgent: string,
     ip: string,
     expiresIn: Date,
-  ): Promise<refreshTokenEntity> {
+  ): Promise<RefreshTokenEntity> {
     return this.refreshTokenRepository().save({
       refreshToken,
       userId,
@@ -40,20 +41,24 @@ export class RefreshTokenRepository
     });
   }
 
-  findRefreshToken(refreshToken: string): Promise<refreshTokenEntity | null> {
-    return this.refreshTokenRepository().findOne({
+  findRefreshToken(
+    refreshToken: string,
+    entityManager?: EntityManager,
+  ): Promise<RefreshTokenEntity | null> {
+    return this.refreshTokenRepository(entityManager).findOne({
       where: { refreshToken, expiresIn: MoreThanOrEqual(new Date()) },
       relations: { user: true },
     });
   }
 
-  async deleteRefreshTokenByUserId(userId: string): Promise<string> {
-    await this.refreshTokenRepository().delete({ userId });
-    return 'refresh token deleted';
+  async deleteRefreshTokenByUserId(userId: string): Promise<DeleteResult> {
+    return this.refreshTokenRepository().delete({ userId });
   }
 
-  async deleteRefreshToken(refreshToken: string): Promise<string> {
-    await this.refreshTokenRepository().delete({ refreshToken });
-    return 'refresh token deleted';
+  async deleteRefreshToken(
+    refreshToken: string,
+    entityManager?: EntityManager,
+  ): Promise<DeleteResult> {
+    return this.refreshTokenRepository(entityManager).delete({ refreshToken });
   }
 }

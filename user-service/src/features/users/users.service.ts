@@ -1,7 +1,12 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { IUsersRepository } from './users-repository.adapter';
 import { CreateUserDto } from './dto/create-user.dto';
-import { IRefreshTokenRepository } from '../../auth/dto/refresh-token-repository.interface';
+import { IRefreshTokenRepository } from '../../auth/refresh-token-repository.adapter';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RecoverUserDto } from './dto/recover-user.dto';
 import { RecreateUserDto } from './dto/recreate-user.dto';
@@ -19,8 +24,10 @@ import { DataSource } from 'typeorm';
 
 @Injectable()
 export class UsersService {
+  logger = new Logger(UsersService.name, { timestamp: true });
+
   constructor(
-    private readonly userRepository: IUsersRepository,
+    private readonly usersRepository: IUsersRepository,
     private readonly refreshTokenRepository: IRefreshTokenRepository,
     private readonly avatarRepository: IAvatarRepository,
     private readonly redisService: RedisService,
@@ -34,7 +41,7 @@ export class UsersService {
       return cached;
     }
 
-    const users = await this.userRepository.getAllExistingUsers();
+    const users = await this.usersRepository.getAllExistingUsers();
     await this.redisService.set(cachedKey, users, 30);
     return users;
   }
@@ -46,7 +53,7 @@ export class UsersService {
       return cached;
     }
 
-    const user = await this.userRepository.findUserById(userId);
+    const user = await this.usersRepository.findUserById(userId);
     await this.redisService.set(cachedKey, user, 30);
     return user;
   }
@@ -54,7 +61,7 @@ export class UsersService {
   async createUser(createUserData: CreateUserDto): Promise<UserDto | null> {
     await this.redisService.del('users:all');
 
-    return this.userRepository.createOneUser(createUserData);
+    return this.usersRepository.createOneUser(createUserData);
   }
 
   async updateUser(userId: string, updateData: UpdateUserDto): Promise<string> {
@@ -62,61 +69,111 @@ export class UsersService {
     await this.redisService.del(cachedKey);
     await this.redisService.del('users:all');
 
-    const user = await this.userRepository.findUserByIdWithDeleted(userId);
-    if (!user || user.deletedAt)
+    const user = await this.usersRepository.findUserByIdWithDeleted(userId);
+    if (!user || user.deletedAt) {
       throw new BadRequestException('user not found');
-    return this.userRepository.updateUser(userId, updateData);
+    }
+
+    const updateRelust = await this.usersRepository.updateUser(
+      userId,
+      updateData,
+    );
+
+    if (!updateRelust.affected) {
+      throw new BadRequestException('nothing to update');
+    }
+    return `update completed, updated colums: ${updateRelust.affected}`;
   }
 
   async deleteUser(userId: string): Promise<string> {
-    const cachedKey = `users:${userId}`;
-    await this.redisService.del(cachedKey);
-    await this.redisService.del('users:all');
+    try {
+      const cachedKey = `users:${userId}`;
+      await this.redisService.del(cachedKey);
+      await this.redisService.del('users:all');
 
-    const user = await this.userRepository.findUserByIdWithDeleted(userId);
-    if (!user || user.deletedAt)
-      throw new BadRequestException('user not found');
-    const userDeleted = await this.userRepository.deleteOneUserById(userId);
-    const refreshTokenDeleted =
-      await this.refreshTokenRepository.deleteRefreshTokenByUserId(userId);
-    return `${userDeleted}, ${refreshTokenDeleted}`;
+      const user = await this.usersRepository.findUserByIdWithDeleted(userId);
+      if (!user || user.deletedAt) {
+        throw new BadRequestException('user not found');
+      }
+      const deletedResult =
+        await this.usersRepository.deleteOneUserById(userId);
+      if (!deletedResult.affected) {
+        return 'user not affected';
+      }
+      const refreshTokenDeleted =
+        await this.refreshTokenRepository.deleteRefreshTokenByUserId(userId);
+      if (!refreshTokenDeleted.affected) {
+        return 'refresh token didnt deleted';
+      }
+      return 'user deleted, refresh token deleted';
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
   }
 
   async recoverUser(recoverUserData: RecoverUserDto): Promise<string> {
     await this.redisService.del('users:all');
 
     //add number verification
-    const user = await this.userRepository.findUserByPhoneWithDeleted(
+    const user = await this.usersRepository.findUserByPhoneWithDeleted(
       recoverUserData.phone,
     );
-    if (!user) throw new BadRequestException('user not found');
+    if (!user) {
+      throw new BadRequestException('user not found');
+    }
+    if (!user.deletedAt) {
+      throw new BadRequestException('user already exists');
+    }
 
-    return this.userRepository.recoverUser(recoverUserData);
+    const recoveredUser =
+      await this.usersRepository.recoverUser(recoverUserData);
+    if (!recoveredUser.affected) {
+      throw new InternalServerErrorException('couldnt recover user');
+    }
+
+    return `user ${user.login} recovered`;
   }
 
   async recreateUser(recreateUserData: RecreateUserDto): Promise<UserDto> {
     await this.redisService.del('users:all');
 
     const { login, phone, age, bio } = recreateUserData;
+    const user = await this.usersRepository.findUserByPhoneWithDeleted(phone);
+    if (!user) {
+      throw new BadRequestException('user not found');
+    }
+    if (!user.deletedAt) {
+      throw new BadRequestException('user already exists');
+    }
+
+    const deletedUser =
+      await this.usersRepository.deleteOneUserHardByPhone(phone);
+    if (deletedUser.affected !== 1) {
+      throw new InternalServerErrorException('couldnt delete user');
+    }
+
     //add number verification
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(recreateUserData.password, salt);
 
     recreateUserData = { login, phone, password: hashedPassword, age, bio };
-    return this.userRepository.recreateUser(recreateUserData);
+    return this.usersRepository.recreateUser(recreateUserData);
   }
 
   async getActiveUsers({
     min_age,
     max_age,
   }: GetActiveUsersDto): Promise<UserDto[]> {
-    const activeUsers = await this.userRepository.getActiveUsers(
+    const activeUsers = await this.usersRepository.getActiveUsers(
       min_age,
       max_age,
     );
     const userIds = activeUsers.map((u) => u.id);
 
     const avatars = await this.avatarRepository.findGroupByIds(userIds);
+    if (avatars.length === 0) {
+      throw new BadRequestException('avatar not found');
+    }
 
     return activeUsers.map((user) => ({
       ...user,
@@ -126,66 +183,137 @@ export class UsersService {
 
   //admin method
   getAll(): Promise<UserDto[]> {
-    return this.userRepository.getAllUsers();
+    return this.usersRepository.getAllUsers();
   }
 
   //admin method
   async deleteUserHard(userId: string): Promise<string> {
-    const cachedKey = `users:${userId}`;
-    await this.redisService.del(cachedKey);
+    try {
+      const cachedKey = `users:${userId}`;
+      await this.redisService.del(cachedKey);
 
-    const user = await this.userRepository.findUserByIdWithDeleted(userId);
-    if (!user) throw new BadRequestException('user not found');
-    if (user.deletedAt) Logger.warn('user was already softly deleted');
-    const userDeleted = await this.userRepository.deleteOneUserByIdHard(userId);
-    const refreshTokenDeleted =
-      await this.refreshTokenRepository.deleteRefreshTokenByUserId(userId);
-    return `${userDeleted}, ${refreshTokenDeleted}`;
+      const user = await this.usersRepository.findUserByIdWithDeleted(userId);
+      if (!user) {
+        throw new BadRequestException('user not found');
+      }
+      if (user.deletedAt) {
+        this.logger.warn('user was already softly deleted');
+      }
+
+      const deletedResult =
+        await this.usersRepository.deleteOneUserByIdHard(userId);
+      if (!deletedResult.affected) {
+        return 'user not affected';
+      }
+
+      const refreshTokenDeleted =
+        await this.refreshTokenRepository.deleteRefreshTokenByUserId(userId);
+      if (!refreshTokenDeleted.affected) {
+        return 'refresh token didnt deleted';
+      }
+      return 'user deleted, refresh token deleted';
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
   }
 
   //admin method
-  async giveAdmin(giveAdminData: GiveAdminDto): Promise<string> {
-    const userId = giveAdminData.newAdminId;
-    const user = await this.userRepository.findUserByIdWithDeleted(userId);
-    if (!user || user.deletedAt)
-      throw new BadRequestException('user not found');
-    if (user.role === RoleEnum.ADMIN)
-      throw new BadRequestException(
-        `user '${giveAdminData.newAdminId}' is already admin`,
-      );
-    return this.userRepository.giveAdmin(giveAdminData);
+  async giveAdmin({ newAdminId }: GiveAdminDto): Promise<string> {
+    try {
+      const user =
+        await this.usersRepository.findUserByIdWithDeleted(newAdminId);
+      if (!user || user.deletedAt) {
+        throw new BadRequestException('user not found');
+      }
+      if (user.role === RoleEnum.ADMIN) {
+        throw new BadRequestException(`user '${newAdminId}' is already admin`);
+      }
+      const updated = await this.usersRepository.giveAdmin(newAdminId);
+      if (!updated.affected) {
+        return 'couldnt update user';
+      }
+      return `update completed, updated colums: ${updated.affected}`;
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
   }
 
   async increaseBalance(
     { amount }: IncreaseBalanceDto,
     userId: string,
   ): Promise<string> {
-    return await this.userRepository.increaseBalance(userId, amount);
+    try {
+      const updated = await this.usersRepository.increaseBalance(
+        userId,
+        amount,
+      );
+      if (!updated.affected) {
+        throw new BadRequestException('user not found');
+      }
+
+      return `balance updated`;
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
   }
 
   async decreaseBalance(
     { amount }: DecreaseBalanceDto,
     userId: string,
   ): Promise<string> {
-    return await this.userRepository.decreaseBalance(userId, amount);
+    try {
+      const updated = await this.usersRepository.decreaseBalance(
+        userId,
+        amount,
+      );
+      if (!updated.affected) {
+        throw new BadRequestException(
+          'user not found or dont have enougth money',
+        );
+      }
+      return 'balance updated';
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
   }
 
   async transferMoney(
-    { amount, recieverId }: TransferMoneyDto,
+    { amount, receiverId }: TransferMoneyDto,
     senderId: string,
   ): Promise<string> {
-    if (senderId === recieverId) {
+    if (senderId === receiverId) {
       throw new BadRequestException('self transfers not allowed');
     }
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.startTransaction();
 
     try {
-      await this.userRepository.decreaseBalance(senderId, amount);
-      await this.userRepository.increaseBalance(recieverId, amount);
+      const senderUpdated = await this.usersRepository.decreaseBalance(
+        senderId,
+        amount,
+        queryRunner.manager,
+      );
+
+      if (!senderUpdated.affected) {
+        throw new BadRequestException(
+          'user not found or dont have enougth money',
+        );
+      }
+
+      const reveiverUpdated = await this.usersRepository.increaseBalance(
+        receiverId,
+        amount,
+        queryRunner.manager,
+      );
+
+      if (!reveiverUpdated.affected) {
+        throw new BadRequestException('user not found');
+      }
 
       await queryRunner.commitTransaction();
-      return `transfer from ${senderId} to ${recieverId} executed`;
+
+      return `transfer from ${senderId} to ${receiverId} executed`;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new BadRequestException(`transfer failed: ${String(error)}`);

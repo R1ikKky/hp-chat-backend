@@ -1,12 +1,11 @@
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository, UpdateResult } from 'typeorm';
 import { BaseRepository } from '../../common/repositories/base.repository';
 import { IAvatarRepository } from './avatar-repository.adapter';
 import { AvatarEntity } from './entities/avatar.entity';
-import { UploadException } from '../../providers/files/s3/exceptions/upload.exception';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class avatarRepository
+export class AvatarRepository
   extends BaseRepository
   implements IAvatarRepository
 {
@@ -25,29 +24,21 @@ export class avatarRepository
   }
 
   async saveAvatar(userId: string, avatarLink: string): Promise<AvatarEntity> {
-    try {
-      return await this.avatarRepository().save({
-        userId,
-        avatarLink,
-        isActive: false,
-      });
-    } catch (e) {
-      throw new UploadException(`error occured: ${String(e)}`);
-    }
+    return await this.avatarRepository().save({
+      userId,
+      avatarLink,
+      isActive: false,
+    });
   }
 
-  async deleteAvatar(avatarId: string): Promise<string> {
-    const deletedAvatar = await this.avatarRepository().softDelete(avatarId);
-    if (!deletedAvatar.affected) return 'user not affected';
-    return 'user affected';
+  async deleteAvatar(avatarId: string): Promise<UpdateResult> {
+    return await this.avatarRepository().softDelete(avatarId);
   }
 
-  async getAvatarById(avatarId: string): Promise<AvatarEntity> {
-    const avatar = await this.avatarRepository().findOne({
+  async getAvatarById(avatarId: string): Promise<AvatarEntity | null> {
+    return await this.avatarRepository().findOne({
       where: { id: avatarId },
     });
-    if (!avatar) throw new BadRequestException('avatar not found');
-    return avatar;
   }
 
   async findGroupByIds(userIds: string[]): Promise<AvatarEntity[]> {

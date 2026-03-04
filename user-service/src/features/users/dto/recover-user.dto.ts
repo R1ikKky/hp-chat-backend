@@ -4,5 +4,5 @@ import { IsPhoneNumber } from 'class-validator';
 export class RecoverUserDto {
   @ApiProperty({ nullable: false })
   @IsPhoneNumber('RU')
-  phone!: string;
+  readonly phone!: string;
 }

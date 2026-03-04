@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SignupDto, SignupResponseDto } from './dto/signup.dto';
 import { IUsersRepository } from '../features/users/users-repository.adapter';
 import * as bcrypt from 'bcrypt';
-import { IRefreshTokenRepository } from './dto/refresh-token-repository.interface';
+import { IRefreshTokenRepository } from './refresh-token-repository.adapter';
 import { LogoutDto } from './dto/logout.dto';
 import { RoleEnum } from '../common/enums/role.enum';
 import { DataSource } from 'typeorm';
@@ -19,7 +19,7 @@ import { TokensDto } from './dto/tokens.dto';
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly userRepository: IUsersRepository,
+    private readonly usersRepository: IUsersRepository,
     private readonly refreshTokenRepository: IRefreshTokenRepository,
     private readonly dataSource: DataSource,
   ) {}
@@ -32,7 +32,10 @@ export class AuthService {
     const { login, phone, password, age, bio } = signupData;
 
     const phoneOrLoginInUse =
-      await this.userRepository.findUserByPhoneOrLoginWithDeleted(phone, login);
+      await this.usersRepository.findUserByPhoneOrLoginWithDeleted(
+        phone,
+        login,
+      );
 
     if (phoneOrLoginInUse && phoneOrLoginInUse.deletedAt) {
       throw new BadRequestException(
@@ -46,7 +49,7 @@ export class AuthService {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const user = await this.userRepository.createOneUser({
+    const user = await this.usersRepository.createOneUser({
       login,
       phone,
       password: hashedPassword,
@@ -70,8 +73,10 @@ export class AuthService {
     userAgent: string,
     ip: string,
   ): Promise<LoginResponseDto> {
-    const user = await this.userRepository.findUserByPhoneWithDeleted(phone);
-    if (!user) throw new UnauthorizedException('wrong credentials');
+    const user = await this.usersRepository.findUserByPhoneWithDeleted(phone);
+    if (!user) {
+      throw new UnauthorizedException('wrong credentials');
+    }
 
     const passwordIsCorrect: boolean = await bcrypt.compare(
       password,
@@ -81,7 +86,9 @@ export class AuthService {
       throw new UnauthorizedException('wrong credentials');
     }
 
-    if (user.deletedAt) throw new NotFoundException('this user was deleted');
+    if (user.deletedAt) {
+      throw new NotFoundException('this user was deleted');
+    }
 
     const tokens = await this.generateUserTokens(
       user.id,
@@ -96,7 +103,16 @@ export class AuthService {
   }
 
   async logout({ refreshToken }: LogoutDto): Promise<string> {
-    return this.refreshTokenRepository.deleteRefreshToken(refreshToken);
+    try {
+      const deletedToken =
+        await this.refreshTokenRepository.deleteRefreshToken(refreshToken);
+      if (!deletedToken.affected) {
+        throw new UnauthorizedException('refresh token didnt deleted');
+      }
+      return 'refresh token deleted';
+    } catch (e) {
+      throw new UnauthorizedException(e);
+    }
   }
 
   async refreshTokens(
@@ -108,11 +124,26 @@ export class AuthService {
     await queryRunner.startTransaction();
 
     try {
-      const token =
-        await this.refreshTokenRepository.findRefreshToken(refreshToken);
-      if (!token) throw new UnauthorizedException('invalid refresh token');
-      await this.refreshTokenRepository.deleteRefreshToken(refreshToken);
+      const token = await this.refreshTokenRepository.findRefreshToken(
+        refreshToken,
+        queryRunner.manager,
+      );
+
+      if (!token) {
+        throw new UnauthorizedException('invalid refresh token');
+      }
+
+      const deletedToken = await this.refreshTokenRepository.deleteRefreshToken(
+        refreshToken,
+        queryRunner.manager,
+      );
+
+      if (!deletedToken.affected) {
+        throw new UnauthorizedException('refresh token didnt deleted');
+      }
+
       await queryRunner.commitTransaction();
+
       return this.generateUserTokens(
         token.userId,
         token.user.role,

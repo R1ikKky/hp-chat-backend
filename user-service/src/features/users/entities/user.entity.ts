@@ -1,6 +1,6 @@
 import { Column, DeleteDateColumn, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
-import { refreshTokenEntity } from '../../../auth/entities/refresh-token.entity';
+import { RefreshTokenEntity } from '../../../auth/entities/refresh-token.entity';
 import { Exclude } from 'class-transformer';
 import { RoleEnum } from '../../../common/enums/role.enum';
 import { AvatarEntity } from '../../avatar/entities/avatar.entity';
@@ -33,8 +33,8 @@ export class UsersEntity extends BaseEntity {
   @Exclude()
   deletedAt!: Date | null;
 
-  @OneToMany(() => refreshTokenEntity, (r) => r.user)
-  refreshTokens!: refreshTokenEntity[];
+  @OneToMany(() => RefreshTokenEntity, (r) => r.user)
+  refreshTokens!: RefreshTokenEntity[];
 
   @OneToMany(() => AvatarEntity, (a) => a.user)
   avatars!: AvatarEntity[];

@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { BalanceResetService } from './balance-reset.service';
-import { usersRepositoryProvider } from '../users/dto/users-repository.provider';
+import { usersRepositoryProvider } from '../users/users-repository.provider';
 import { BalanceResetController } from './balance-reset.controller';
 import { ProvidersModule } from '../../providers/providers.module';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
-import { resetBalanceConsumer } from './balance-reset.consumer';
+import { ResetBalanceConsumer } from './balance-reset.consumer';
 
 @Module({
   imports: [
@@ -35,7 +35,7 @@ import { resetBalanceConsumer } from './balance-reset.consumer';
   providers: [
     BalanceResetService,
     usersRepositoryProvider,
-    resetBalanceConsumer,
+    ResetBalanceConsumer,
   ],
   exports: [BalanceResetService, BullModule],
 })

@@ -8,7 +8,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AvatarService } from './avatar.service';
-import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserId } from '../../common/decorators/user-id.decorator';
 import { UploadAvatarDto } from './dto/upload-avatar.dto';
 import type { IUploadedMulterFile } from '../../providers/files/s3/interfaces/upload-file.interface';
@@ -22,15 +22,11 @@ import { imageFileFilter } from '../../common/utils/imageFileFilter';
 export class AvatarController {
   constructor(private readonly avatarService: AvatarService) {}
 
-  @ApiParam({
-    name: 'uploadAvatarData',
-    required: true,
-    type: 'UploadAvatarDto',
-  })
+  @ApiBody({ type: UploadAvatarDto })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
-    type: 'string',
+    type: AvatarEntity,
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -53,11 +49,7 @@ export class AvatarController {
     return this.avatarService.uploadAvatar(uploadAvatarData, file, userId);
   }
 
-  @ApiParam({
-    name: 'deleteAvatarData',
-    required: true,
-    type: 'DeleteAvatarDto',
-  })
+  @ApiBody({ type: DeleteAvatarDto })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',

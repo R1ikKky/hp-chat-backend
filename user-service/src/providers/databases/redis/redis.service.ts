@@ -7,8 +7,8 @@ export class RedisService {
   private client: RedisType;
   constructor(private readonly cfg: ConfigService) {
     this.client = new Redis({
-      host: '127.0.0.1',
-      port: 6379,
+      host: cfg.get('REDIS_HOST'),
+      port: cfg.get('REDIS_PORT'),
       password: String(cfg.get('REDIS_PASSWORD')),
     });
   }

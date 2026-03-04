@@ -4,19 +4,23 @@ import { IUsersRepository } from '../users/users-repository.adapter';
 import { BadRequestException, Logger } from '@nestjs/common';
 
 @Processor('reset-balance', { concurrency: 5 })
-export class resetBalanceConsumer extends WorkerHost {
-  private readonly logger = new Logger(resetBalanceConsumer.name, {
+export class ResetBalanceConsumer extends WorkerHost {
+  private readonly logger = new Logger(ResetBalanceConsumer.name, {
     timestamp: true,
   });
 
-  constructor(private readonly userRepository: IUsersRepository) {
+  constructor(private readonly usersRepository: IUsersRepository) {
     super();
   }
 
   async process(job: Job) {
     try {
-      await this.userRepository.resetBalance();
+      const updated = await this.usersRepository.resetBalance();
+      if (!updated.affected) {
+        throw new BadRequestException('update failed');
+      }
       this.logger.log(`Bulljs job '${job.id}', 'resetBalance' was executed`);
+      return 'done';
     } catch (e) {
       throw new BadRequestException(`something went wrong: ${String(e)}`);
     }

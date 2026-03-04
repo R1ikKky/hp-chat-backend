@@ -1,5 +1,6 @@
 import { IsUUID } from 'class-validator';
 
 export class DeleteAvatarDto {
-  @IsUUID() avatarId!: string;
+  @IsUUID()
+  readonly avatarId!: string;
 }

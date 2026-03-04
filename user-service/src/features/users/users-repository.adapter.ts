@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RecoverUserDto } from './dto/recover-user.dto';
 import { RecreateUserDto } from './dto/recreate-user.dto';
-import { GiveAdminDto } from './dto/give-admin.dto';
+import { DeleteResult, EntityManager, UpdateResult } from 'typeorm';
 
 export abstract class IUsersRepository {
   abstract getAllExistingUsers(): Promise<UsersEntity[]>;
@@ -25,20 +25,29 @@ export abstract class IUsersRepository {
   abstract updateUser(
     userId: string,
     updateUserData: UpdateUserDto,
-  ): Promise<string>;
-  abstract deleteOneUserById(userId: string): Promise<string>;
+  ): Promise<UpdateResult>;
+  abstract deleteOneUserById(userId: string): Promise<DeleteResult>;
+  abstract deleteOneUserHardByPhone(phone: string): Promise<DeleteResult>;
   abstract recreateUser(
     recreateUserData: RecreateUserDto,
   ): Promise<UsersEntity>;
-  abstract recoverUser(recoverUserData: RecoverUserDto): Promise<string>;
+  abstract recoverUser(recoverUserData: RecoverUserDto): Promise<UpdateResult>;
   abstract getActiveUsers(
     min_age: number,
     max_age: number,
   ): Promise<UsersEntity[]>;
   abstract getAllUsers(): Promise<UsersEntity[]>;
-  abstract deleteOneUserByIdHard(userId: string): Promise<string>;
-  abstract giveAdmin(giveAdminData: GiveAdminDto): Promise<string>;
-  abstract increaseBalance(userId: string, amount: number): Promise<string>;
-  abstract decreaseBalance(userId: string, amount: number): Promise<string>;
-  abstract resetBalance(): Promise<string>;
+  abstract deleteOneUserByIdHard(userId: string): Promise<DeleteResult>;
+  abstract giveAdmin(newAdminId: string): Promise<UpdateResult>;
+  abstract increaseBalance(
+    userId: string,
+    amount: number,
+    entityManager?: EntityManager,
+  ): Promise<UpdateResult>;
+  abstract decreaseBalance(
+    userId: string,
+    amount: number,
+    entityManager?: EntityManager,
+  ): Promise<UpdateResult>;
+  abstract resetBalance(): Promise<UpdateResult>;
 }

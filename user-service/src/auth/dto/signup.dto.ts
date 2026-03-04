@@ -12,26 +12,31 @@ import { TokensDto } from './tokens.dto';
 export class SignupDto {
   @ApiProperty({ nullable: false })
   @IsString()
-  login!: string;
+  readonly login!: string;
+
   @ApiProperty({ nullable: false })
   @IsPhoneNumber('RU')
-  phone!: string;
+  readonly phone!: string;
+
   @ApiProperty({ nullable: false })
   @IsString()
   @MinLength(6)
   @Matches(/^(?=.*[0-9])/, {
     message: 'Password must contain at least one number',
   })
-  password!: string;
+  readonly password!: string;
+
   @ApiProperty({ nullable: false })
   @IsNumber()
-  age!: number;
+  readonly age!: number;
+
   @ApiProperty({ nullable: false })
   @IsString()
-  bio!: string;
+  readonly bio!: string;
 }
 
 export class SignupResponseDto {
-  user!: UserDto;
-  tokens!: TokensDto;
+  readonly user!: UserDto;
+
+  readonly tokens!: TokensDto;
 }

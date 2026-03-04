@@ -3,8 +3,8 @@ import { IsInt, IsUUID, Min } from 'class-validator';
 export class TransferMoneyDto {
   @IsInt()
   @Min(0)
-  amount!: number;
+  readonly amount!: number;
 
   @IsUUID()
-  recieverId!: string;
+  readonly receiverId!: string;
 }

@@ -18,30 +18,50 @@ export class AvatarService {
     file: IUploadedMulterFile,
     userId: string,
   ): Promise<AvatarEntity> {
-    const UserAvatars =
-      await this.avatarRepository.getAllAvatarsByUserId(userId);
-    if (UserAvatars.length < 5) {
+    try {
+      const UserAvatars =
+        await this.avatarRepository.getAllAvatarsByUserId(userId);
+
+      if (UserAvatars.length >= 5) {
+        throw new BadRequestException('you have reached maximum avatars count');
+      }
+
       const { path } = await this.fileService.uploadFile({
         file,
         folder,
         name: userId,
       });
       return await this.avatarRepository.saveAvatar(userId, path);
+    } catch (e) {
+      throw new BadRequestException(e);
     }
-    throw new BadRequestException('you have reached maximum avatars count');
   }
 
   async deleteAvatar(
     { avatarId }: DeleteAvatarDto,
     userId: string,
   ): Promise<string> {
-    const { userId: userIdFromAvatarMetadata } =
-      await this.avatarRepository.getAvatarById(avatarId);
-    if (!(userId === userIdFromAvatarMetadata)) {
-      throw new BadRequestException(
-        'you dont have permissions to delete this avatar',
-      );
+    try {
+      const avatar = await this.avatarRepository.getAvatarById(avatarId);
+      if (!avatar) {
+        throw new BadRequestException('avatar not found');
+      }
+
+      const { userId: userIdFromAvatarMetadata } = avatar;
+
+      if (!(userId === userIdFromAvatarMetadata)) {
+        throw new BadRequestException(
+          'you dont have permissions to delete this avatar',
+        );
+      }
+
+      const deletedAvatar = await this.avatarRepository.deleteAvatar(avatarId);
+      if (!deletedAvatar.affected) {
+        throw new BadRequestException('user didnt deleted');
+      }
+      return 'user deleted';
+    } catch (e) {
+      throw new BadRequestException(e);
     }
-    return await this.avatarRepository.deleteAvatar(avatarId);
   }
 }

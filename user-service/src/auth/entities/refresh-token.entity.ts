@@ -9,7 +9,7 @@ import {
 import { UsersEntity } from '../../features/users/entities/user.entity';
 
 @Entity()
-export class refreshTokenEntity {
+export class RefreshTokenEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
