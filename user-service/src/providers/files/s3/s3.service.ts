@@ -14,7 +14,7 @@ import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class S3Service extends IFileService {
-  private readonly logger = new Logger(S3Service.name);
+  private readonly logger = new Logger(S3Service.name, { timestamp: true });
   private readonly bucketName = 'main';
 
   constructor(@Inject(S3Lib) private readonly S3: AWS.S3) {

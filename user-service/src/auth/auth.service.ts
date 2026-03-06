@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -17,6 +18,8 @@ import { TokensDto } from './dto/tokens.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name, { timestamp: true });
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersRepository: IUsersRepository,
