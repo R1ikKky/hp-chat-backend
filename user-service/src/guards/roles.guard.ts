@@ -20,13 +20,18 @@ export class RolesGuard implements CanActivate {
     if (skipGuard) {
       return true;
     }
-    const roles = this.reflector.get<string[]>('roles', context.getHandler());
+    const roles: string[] = this.reflector.get<string[]>(
+      'roles',
+      context.getHandler(),
+    );
     if (!roles) {
       return true;
     }
     const request: CustomRequest = context.switchToHttp().getRequest();
-    const userRole = request.userRole;
-    if (!userRole) throw new BadRequestException('cant find the role');
+    const userRole: string = request.userRole;
+    if (!userRole) {
+      throw new BadRequestException('cant find the role');
+    }
 
     if (roles.some((role) => userRole == role)) {
       return true;

@@ -1,18 +1,20 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotImplementedException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BaseRepository } from '../../common/repositories/base.repository';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import {
+  DataSource,
+  DeleteResult,
+  EntityManager,
+  Repository,
+  UpdateResult,
+} from 'typeorm';
 import { UsersEntity } from './entities/user.entity';
-import { IUsersRepository } from './dto/users-repository.interface';
+import { IUsersRepository } from './users-repository.adapter';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RecoverUserDto } from './dto/recover-user.dto';
 import { RecreateUserDto } from './dto/recreate-user.dto';
 import { RoleEnum } from '../../common/enums/role.enum';
-import { GiveAdminDto } from './dto/give-admin.dto';
+import { AvatarEntity } from '../avatar/entities/avatar.entity';
 
 @Injectable()
 export class UsersRepository
@@ -30,12 +32,13 @@ export class UsersRepository
   }
 
   async getAllExistingUsers(): Promise<UsersEntity[]> {
-    return this.usersRepository().find();
+    return this.usersRepository().find({ relations: { avatars: true } });
   }
 
   async findUserById(userId: string): Promise<UsersEntity | null> {
     return this.usersRepository().findOne({
       where: { id: userId },
+      relations: { avatars: true },
     });
   }
 
@@ -89,95 +92,90 @@ export class UsersRepository
   async updateUser(
     userId: string,
     updateUserData: UpdateUserDto,
-  ): Promise<string> {
-    const updateRelust = await this.usersRepository().update(
-      userId,
-      updateUserData,
-    );
-    if (updateRelust.affected) {
-      return `update completed, updated colums: ${updateRelust.affected}`;
-    }
-    throw new BadRequestException('nothing to update');
+  ): Promise<UpdateResult> {
+    return this.usersRepository().update(userId, updateUserData);
   }
 
-  async deleteOneUserById(userId: string): Promise<string> {
-    try {
-      const result = await this.usersRepository().softDelete({ id: userId });
-      if (result.affected) return 'user affected';
-      return 'user not affected';
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  async deleteOneUserById(userId: string): Promise<DeleteResult> {
+    return this.usersRepository().softDelete({ id: userId });
   }
 
-  async deleteOneUserHardByPhone(phone: string): Promise<string> {
-    try {
-      const result = await this.usersRepository().delete({ phone });
-      if (result.affected) return 'user affected';
-      return 'user not affected';
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  async deleteOneUserHardByPhone(phone: string): Promise<DeleteResult> {
+    return this.usersRepository().delete({ phone });
   }
 
   async recreateUser(recreateUserData: RecreateUserDto): Promise<UsersEntity> {
-    const phone = recreateUserData.phone;
-    const user = await this.usersRepository().findOne({
-      withDeleted: true,
-      where: { phone },
-    });
-    if (!user) {
-      throw new BadRequestException('user not found');
-    }
-    if (!user.deletedAt) {
-      throw new BadRequestException('user already exists');
-    }
-    const deletedUser = await this.usersRepository().delete({ phone });
-    if (deletedUser.affected === 1) {
-      const newUser = this.usersRepository().save(recreateUserData);
-      return newUser;
-    } else {
-      throw new NotImplementedException('couldnt delete user');
-    }
+    return this.usersRepository().save(recreateUserData);
   }
 
-  async recoverUser({ phone }: RecoverUserDto): Promise<string> {
-    const user = await this.usersRepository().findOne({
-      withDeleted: true,
-      where: { phone },
-    });
-    if (!user) {
-      throw new BadRequestException('no user found');
-    }
-    if (!user.deletedAt) {
-      throw new BadRequestException('user already exists');
-    }
-    this.usersRepository().restore({ phone });
-    return `user ${user.login} recovered`;
+  async recoverUser({ phone }: RecoverUserDto): Promise<UpdateResult> {
+    return this.usersRepository().restore({ phone });
+  }
+
+  async getActiveUsers(
+    min_age: number,
+    max_age: number,
+  ): Promise<UsersEntity[]> {
+    return this.usersRepository()
+      .createQueryBuilder('u')
+      .where('u.age > :min_age AND u.age < :max_age', { min_age, max_age })
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('COUNT(a.id)')
+          .from(AvatarEntity, 'a')
+          .where('a.userId = u.id')
+          .getQuery();
+        return `(${subQuery}) > 2`;
+      })
+      .getMany();
   }
 
   async getAllUsers(): Promise<UsersEntity[]> {
     return this.usersRepository().find({ withDeleted: true });
   }
 
-  async deleteOneUserByIdHard(userId: string): Promise<string> {
-    try {
-      const result = await this.usersRepository().delete({ id: userId });
-      if (result.affected) return 'user affected';
-      return 'user not affected';
-    } catch (e) {
-      throw new BadRequestException(e);
-    }
+  async deleteOneUserByIdHard(userId: string): Promise<DeleteResult> {
+    return this.usersRepository().delete({ id: userId });
   }
 
-  async giveAdmin({ newAdminId }: GiveAdminDto): Promise<string> {
-    const updateRelust = await this.usersRepository().update(
+  async giveAdmin(newAdminId: string): Promise<UpdateResult> {
+    return this.usersRepository().update(
       { id: newAdminId },
       { role: RoleEnum.ADMIN },
     );
-    if (updateRelust.affected) {
-      return `update completed, updated colums: ${updateRelust.affected}`;
-    }
-    throw new BadRequestException();
+  }
+
+  async increaseBalance(
+    userId: string,
+    amount: number,
+    entityManager: EntityManager,
+  ): Promise<UpdateResult> {
+    return this.usersRepository(entityManager)
+      .createQueryBuilder()
+      .update(UsersEntity)
+      .set({ balance: () => 'balance + :amount' })
+      .setParameters({ amount })
+      .where('id = :userId', { userId })
+      .execute();
+  }
+
+  async decreaseBalance(
+    userId: string,
+    amount: number,
+    entityManager: EntityManager,
+  ): Promise<UpdateResult> {
+    return this.usersRepository(entityManager)
+      .createQueryBuilder()
+      .update(UsersEntity)
+      .set({ balance: () => 'balance - :amount' })
+      .setParameters({ amount })
+      .where('id = :userId', { userId })
+      .andWhere('balance >= :amount', { amount })
+      .execute();
+  }
+
+  async resetBalance(): Promise<UpdateResult> {
+    return this.usersRepository().updateAll({ balance: 0 });
   }
 }

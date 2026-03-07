@@ -4,5 +4,5 @@ import { IsString } from 'class-validator';
 export class LogoutDto {
   @ApiProperty({ nullable: false })
   @IsString()
-  refreshToken!: string;
+  readonly refreshToken!: string;
 }

@@ -4,5 +4,5 @@ import { IsUUID } from 'class-validator';
 export class GiveAdminDto {
   @ApiProperty({ nullable: false })
   @IsUUID()
-  newAdminId!: string;
+  readonly newAdminId!: string;
 }

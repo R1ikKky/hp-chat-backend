@@ -5,21 +5,25 @@ export class UpdateUserDto {
   @ApiProperty({ nullable: false })
   @IsString()
   @IsOptional()
-  login!: string;
+  readonly login!: string;
+
   @ApiProperty({ nullable: false })
   @IsPhoneNumber('RU')
   @IsOptional()
-  phone!: string;
+  readonly phone!: string;
+
   @ApiProperty({ nullable: false })
   @IsString()
   @IsOptional()
-  password!: string;
+  readonly password!: string;
+
   @ApiProperty({ nullable: false })
   @IsNumber()
   @IsOptional()
-  age!: number;
+  readonly age!: number;
+
   @ApiProperty({ nullable: false })
   @IsString()
   @IsOptional()
-  bio!: string;
+  readonly bio!: string;
 }

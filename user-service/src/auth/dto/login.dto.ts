@@ -4,14 +4,17 @@ import { IsPhoneNumber, IsString } from 'class-validator';
 export class LoginDto {
   @ApiProperty({ nullable: false })
   @IsPhoneNumber('RU')
-  phone!: string;
+  readonly phone!: string;
+
   @ApiProperty({ nullable: false })
   @IsString()
-  password!: string;
+  readonly password!: string;
 }
 
 export class LoginResponseDto {
-    accessToken!: string;
-    refreshToken!: string;
-    userId!: string;
+  readonly accessToken!: string;
+
+  readonly refreshToken!: string;
+
+  readonly userId!: string;
 }

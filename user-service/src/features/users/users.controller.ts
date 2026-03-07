@@ -7,7 +7,6 @@ import {
   HttpStatus,
   Patch,
   Post,
-  Req,
   UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -18,9 +17,13 @@ import { RecreateUserDto } from './dto/recreate-user.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RoleEnum } from '../../common/enums/role.enum';
 import { GiveAdminDto } from './dto/give-admin.dto';
-import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserDto } from '../../common/dtos/user-public.dto';
 import { UserId } from '../../common/decorators/user-id.decorator';
+import { GetActiveUsersDto } from './dto/get-active-users.dto';
+import { IncreaseBalanceDto } from './dto/increase-balance.dto';
+import { DecreaseBalanceDto } from './dto/decrease-balance.dto';
+import { TransferMoneyDto } from './dto/transfer-money.dto';
 
 @ApiTags('Users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -28,7 +31,12 @@ import { UserId } from '../../common/decorators/user-id.decorator';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiResponse({ status: HttpStatus.OK, description: 'Success', type: UserDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Success',
+    type: UserDto,
+    isArray: true,
+  })
   @Get('get-all-existing')
   async getAllExisting(): Promise<UserDto[]> {
     return this.usersService.getAllExistingUsers();
@@ -40,11 +48,7 @@ export class UsersController {
     return this.usersService.findUserById(userId);
   }
 
-  @ApiParam({
-    name: 'updateData',
-    required: true,
-    type: UpdateUserDto,
-  })
+  @ApiBody({ type: UpdateUserDto })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
@@ -80,11 +84,7 @@ export class UsersController {
     return this.usersService.deleteUser(userId);
   }
 
-  @ApiParam({
-    name: 'recoverUserData',
-    required: true,
-    type: RecoverUserDto,
-  })
+  @ApiBody({ type: RecoverUserDto })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
@@ -100,11 +100,7 @@ export class UsersController {
     return this.usersService.recoverUser(recoverUserData);
   }
 
-  @ApiParam({
-    name: 'recreateUserData',
-    required: true,
-    type: RecreateUserDto,
-  })
+  @ApiBody({ type: RecreateUserDto })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
@@ -119,7 +115,7 @@ export class UsersController {
     description: 'user already exists',
   })
   @ApiResponse({
-    status: HttpStatus.NOT_IMPLEMENTED,
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'couldnt delete user',
   })
   @Public()
@@ -134,6 +130,7 @@ export class UsersController {
     status: HttpStatus.OK,
     description: 'Success',
     type: UserDto,
+    isArray: true,
   })
   @Get('get-all')
   @Roles(RoleEnum.ADMIN)
@@ -141,10 +138,11 @@ export class UsersController {
     return this.usersService.getAll();
   }
 
-  @ApiParam({
-    name: 'userId',
-    required: true,
-    type: 'uuid',
+  @ApiBody({
+    schema: {
+      type: 'string',
+      format: 'uuid',
+    },
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -161,11 +159,7 @@ export class UsersController {
     return this.usersService.deleteUserHard(userId);
   }
 
-  @ApiParam({
-    name: 'giveAdminData',
-    required: true,
-    type: GiveAdminDto,
-  })
+  @ApiBody({ type: GiveAdminDto })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
@@ -183,5 +177,80 @@ export class UsersController {
   @Roles(RoleEnum.ADMIN)
   async giveAdmin(@Body() giveAdminData: GiveAdminDto): Promise<string> {
     return this.usersService.giveAdmin(giveAdminData);
+  }
+
+  @ApiBody({ type: GetActiveUsersDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Success',
+    type: UserDto,
+    isArray: true,
+  })
+  @Post('get-active-users')
+  async getActiveUsers(
+    @Body() getActiveUsersData: GetActiveUsersDto,
+  ): Promise<UserDto[]> {
+    return this.usersService.getActiveUsers(getActiveUsersData);
+  }
+
+  @ApiBody({ type: IncreaseBalanceDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'balance updated',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user not found',
+  })
+  @Post('increase-my-balance')
+  @Roles(RoleEnum.ADMIN)
+  async increaseBalance(
+    @Body() increaseBalanceData: IncreaseBalanceDto,
+    @UserId() userId: string,
+  ): Promise<string> {
+    return this.usersService.increaseBalance(increaseBalanceData, userId);
+  }
+
+  @ApiBody({ type: DecreaseBalanceDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'balance updated',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'user not found or dont have enougth money',
+  })
+  @Post('decrease-my-balance')
+  @Roles(RoleEnum.ADMIN)
+  async decreaseBalance(
+    @Body() decreaseBalanceData: DecreaseBalanceDto,
+    @UserId() userId: string,
+  ): Promise<string> {
+    return this.usersService.decreaseBalance(decreaseBalanceData, userId);
+  }
+
+  @ApiBody({ type: TransferMoneyDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'transfer from <senderId> to <receiverId> executed',
+    type: 'string',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'transfer failed: user not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'transfer failed: user not found or dont have enougth money',
+  })
+  @Post('transfer-money')
+  @Roles(RoleEnum.ADMIN)
+  async transferMoney(
+    @Body() transferMoneyData: TransferMoneyDto,
+    @UserId() senderId: string,
+  ): Promise<string> {
+    return this.usersService.transferMoney(transferMoneyData, senderId);
   }
 }

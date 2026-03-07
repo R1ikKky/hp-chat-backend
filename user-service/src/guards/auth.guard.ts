@@ -9,6 +9,12 @@ import { Observable } from 'rxjs';
 import { CustomRequest } from '../common/interfaces/customRequest.interface';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../common/decorators/public.decorator';
+import { RoleEnum } from '../common/enums/role.enum';
+
+interface JwtPayload {
+  userId: string;
+  userRole: RoleEnum;
+}
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -24,21 +30,22 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    if(isPublic){
-      return true
+    if (isPublic) {
+      return true;
     }
-
 
     const request: CustomRequest = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
-    if (!token) throw new UnauthorizedException('invalid token');
+    if (!token) {
+      throw new UnauthorizedException('invalid token');
+    }
 
     try {
-      const payload = this.jwtService.verify(token);
+      const payload = this.jwtService.verify<JwtPayload>(token);
       request.userId = payload.userId;
       request.userRole = payload.userRole;
     } catch (e) {
-      throw new UnauthorizedException(`invalid token${e}`);
+      throw new UnauthorizedException(`invalid token${String(e)}`);
     }
 
     return true;

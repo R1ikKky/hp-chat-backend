@@ -12,7 +12,7 @@ import { SignupDto, SignupResponseDto } from './dto/signup.dto';
 import { RefreshTokenDto } from './dto/refresh-tokens.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { LogoutDto } from './dto/logout.dto';
-import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TokensDto } from './dto/tokens.dto';
 
 @ApiTags('Auth')
@@ -20,11 +20,7 @@ import { TokensDto } from './dto/tokens.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiParam({
-    name: 'signupData',
-    required: true,
-    type: SignupDto,
-  })
+  @ApiBody({ type: SignupDto })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
@@ -48,11 +44,7 @@ export class AuthController {
     return this.authService.signup(signupData, userAgent, ip);
   }
 
-  @ApiParam({
-    name: 'loginData',
-    required: true,
-    type: LoginDto,
-  })
+  @ApiBody({ type: LoginDto })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
@@ -76,11 +68,7 @@ export class AuthController {
     return this.authService.login(loginData, userAgent, ip);
   }
 
-  @ApiParam({
-    name: 'refreshTokenDto',
-    required: true,
-    type: RefreshTokenDto,
-  })
+  @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
@@ -104,15 +92,11 @@ export class AuthController {
     );
   }
 
-  @ApiParam({
-    name: 'logoutData',
-    required: true,
-    type: LogoutDto,
-  })
+  @ApiBody({ type: LogoutDto })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
-    type: TokensDto,
+    type: 'string',
   })
   @Post('logout')
   async logout(@Body() logoutData: LogoutDto): Promise<string> {

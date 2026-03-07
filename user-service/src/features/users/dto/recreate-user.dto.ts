@@ -4,17 +4,21 @@ import { IsNumber, IsPhoneNumber, IsString } from 'class-validator';
 export class RecreateUserDto {
   @ApiProperty({ nullable: false })
   @IsString()
-  login!: string;
+  readonly login!: string;
+
   @ApiProperty({ nullable: false })
   @IsPhoneNumber('RU')
-  phone!: string;
+  readonly phone!: string;
+
   @ApiProperty({ nullable: false })
   @IsString()
-  password!: string;
+  readonly password!: string;
+
   @ApiProperty({ nullable: false })
   @IsNumber()
-  age!: number;
+  readonly age!: number;
+
   @ApiProperty({ nullable: false })
   @IsString()
-  bio!: string;
+  readonly bio!: string;
 }
