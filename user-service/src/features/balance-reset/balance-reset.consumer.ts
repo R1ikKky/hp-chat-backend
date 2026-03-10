@@ -16,13 +16,15 @@ export class ResetBalanceConsumer extends WorkerHost {
   async process(job: Job) {
     try {
       const updated = await this.usersRepository.resetBalance();
+
       if (!updated.affected) {
         throw new BadRequestException('update failed');
       }
+
       this.logger.log(`Bulljs job '${job.id}', 'resetBalance' was executed`);
       return 'done';
-    } catch (e) {
-      throw new BadRequestException(`something went wrong: ${String(e)}`);
+    } catch (error) {
+      this.logger.error(`Bulljs job '${job.id}', 'resetBalance' faild,`, error);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { UploadAvatarDto } from './dto/upload-avatar.dto';
 import type { IUploadedMulterFile } from '../../providers/files/s3/interfaces/upload-file.interface';
 import { IFileService } from '../../providers/files/files.adapter';
@@ -8,6 +8,10 @@ import { DeleteAvatarDto } from './dto/delete-avatar.dto';
 
 @Injectable()
 export class AvatarService {
+  private readonly logger = new Logger(AvatarService.name, {
+    timestamp: true,
+  });
+
   constructor(
     private readonly fileService: IFileService,
     private readonly avatarRepository: IAvatarRepository,
@@ -32,8 +36,9 @@ export class AvatarService {
         name: userId,
       });
       return await this.avatarRepository.saveAvatar(userId, path);
-    } catch (e) {
-      throw new BadRequestException(e);
+    } catch (error) {
+      this.logger.error(`an error occured when trying to upload avatar`, error);
+      throw error;
     }
   }
 
@@ -60,8 +65,9 @@ export class AvatarService {
         throw new BadRequestException('user didnt deleted');
       }
       return 'user deleted';
-    } catch (e) {
-      throw new BadRequestException(e);
+    } catch (error) {
+      this.logger.error(`an error occured when trying to delete avatar`, error);
+      throw error;
     }
   }
 }

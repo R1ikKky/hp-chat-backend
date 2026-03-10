@@ -6,9 +6,16 @@ import { ProvidersModule } from './providers/providers.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [AuthModule, FeaturesModule, ConfigsModule, ProvidersModule],
+  imports: [
+    AuthModule,
+    FeaturesModule,
+    ConfigsModule,
+    ProvidersModule,
+    ScheduleModule.forRoot(),
+  ],
   controllers: [],
   providers: [
     {
