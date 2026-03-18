@@ -35,7 +35,7 @@ describe('App (e2e)', () => {
   });
 
   it('/health (GET)', async () => {
-    await request(app.getHttpServer())
+    await request(app.getHttpServer() as Parameters<typeof request>[0])
       .get('/health')
       .expect(200)
       .expect({ status: 'ok' });
