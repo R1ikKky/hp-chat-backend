@@ -10,8 +10,8 @@ export const AppDataSource = new DataSource({
   database: 'user-service',
 
   synchronize: false,
-  migrations: ['src/databases/migrations/*{.ts,.js}'],
-  entities: ['src/**/*.entity{.ts,.js}'],
+  migrations: ['apps/user-service/src/databases/migrations/*{.ts,.js}'],
+  entities: ['apps/user-service/src/**/*.entity{.ts,.js}'],
 
   migrationsRun: false,
   migrationsTableName: 'migrations',
