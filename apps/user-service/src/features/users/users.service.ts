@@ -12,7 +12,7 @@ import { RecoverUserDto } from './dto/recover-user.dto';
 import { RecreateUserDto } from './dto/recreate-user.dto';
 import * as bcrypt from 'bcrypt';
 import { GiveAdminDto } from './dto/give-admin.dto';
-import { RoleEnum } from '../../common/enums/role.enum';
+import { RoleEnum } from '@app/auth';
 import { UserDto } from '../../common/dtos/user-public.dto';
 import { GetActiveUsersDto } from './dto/get-active-users.dto';
 import { IAvatarRepository } from '../avatar/avatar-repository.adapter';

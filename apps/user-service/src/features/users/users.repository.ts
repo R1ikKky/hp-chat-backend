@@ -13,7 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RecoverUserDto } from './dto/recover-user.dto';
 import { RecreateUserDto } from './dto/recreate-user.dto';
-import { RoleEnum } from '../../common/enums/role.enum';
+import { RoleEnum } from '@app/auth';
 import { AvatarEntity } from '../avatar/entities/avatar.entity';
 
 @Injectable()

@@ -10,7 +10,7 @@ import { AuthService } from './auth.service';
 import { LoginDto, LoginResponseDto } from './dto/login.dto';
 import { SignupDto, SignupResponseDto } from './dto/signup.dto';
 import { RefreshTokenDto } from './dto/refresh-tokens.dto';
-import { Public } from '../common/decorators/public.decorator';
+import { Public } from '@app/auth';
 import { LogoutDto } from './dto/logout.dto';
 import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TokensDto } from './dto/tokens.dto';

@@ -21,6 +21,15 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "strict": true
+    "strict": true,
+    "baseUrl": "./",
+    "paths": {
+      "@app/auth": [
+        "libs/auth/src/index.ts"
+      ],
+      "@app/auth/*": [
+        "libs/auth/src/*"
+      ]
+    }
   }
 }

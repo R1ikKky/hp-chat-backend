@@ -6,7 +6,7 @@ import { ProvidersModule } from '../../providers/providers.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersEntity } from './entities/user.entity';
 import { RefreshTokenEntity } from '../../auth/entities/refresh-token.entity';
-import { AuthGuard } from '../../guards/auth.guard';
+import { AuthGuard } from '@app/auth';
 import { refreshTokenRepositoryProvider } from '../../auth/refresh-token-repository.provider';
 import { AvatarEntity } from '../avatar/entities/avatar.entity';
 import { avatarRepositoryProvider } from '../avatar/avatar-repository.provider';

@@ -1,7 +1,7 @@
 import { Controller, Post } from '@nestjs/common';
 import { BalanceResetService } from './balance-reset.service';
 import { Roles } from '../../common/decorators/roles.decorator';
-import { RoleEnum } from '../../common/enums/role.enum';
+import { RoleEnum } from '@app/auth';
 
 @Controller('balance-reset')
 export class BalanceResetController {

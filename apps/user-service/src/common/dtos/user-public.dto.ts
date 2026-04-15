@@ -1,4 +1,4 @@
-import { RoleEnum } from '../../common/enums/role.enum';
+import { RoleEnum } from '@app/auth';
 
 export class UserDto {
   id!: string;

@@ -4,8 +4,7 @@ import { FeaturesModule } from './features/features.module';
 import { ConfigsModule } from './configs/configs.module';
 import { ProvidersModule } from './providers/providers.module';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './guards/auth.guard';
-import { RolesGuard } from './guards/roles.guard';
+import { AuthGuard, RolesGuard } from '@app/auth';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({

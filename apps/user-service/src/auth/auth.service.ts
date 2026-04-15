@@ -12,7 +12,7 @@ import { IUsersRepository } from '../features/users/users-repository.adapter';
 import * as bcrypt from 'bcrypt';
 import { IRefreshTokenRepository } from './refresh-token-repository.adapter';
 import { LogoutDto } from './dto/logout.dto';
-import { RoleEnum } from '../common/enums/role.enum';
+import { RoleEnum } from '@app/auth';
 import { DataSource } from 'typeorm';
 import { TokensDto } from './dto/tokens.dto';
 
