@@ -5,6 +5,6 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 async function bootstrap() {
   const app = await NestFactory.create(NotificationServiceModule);
   app.useWebSocketAdapter(new IoAdapter(app));
-  await app.listen(process.env.port ?? 3000);
+  await app.listen(process.env.NOTIFICATION_PORT ?? 3001);
 }
 void bootstrap();

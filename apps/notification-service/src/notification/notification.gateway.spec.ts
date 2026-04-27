@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationGateway } from './notification.gateway';
+import { AuthService } from '@app/auth';
 import { Server, Socket } from 'socket.io';
 import { expect, beforeEach, describe, it, jest } from '@jest/globals';
 
@@ -8,12 +9,19 @@ const mockClient = (id: string): Socket => ({ id }) as unknown as Socket;
 const mockServer = (size: number): Server =>
   ({ sockets: { sockets: { size } } }) as unknown as Server;
 
+const mockAuthService = {
+  verifyJwt: jest.fn<() => string>().mockReturnValue('user-123'),
+};
+
 describe('NotificationGateway', () => {
   let gateway: NotificationGateway;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [NotificationGateway],
+      providers: [
+        NotificationGateway,
+        { provide: AuthService, useValue: mockAuthService },
+      ],
     }).compile();
 
     gateway = module.get<NotificationGateway>(NotificationGateway);
@@ -32,11 +40,54 @@ describe('NotificationGateway', () => {
   });
 
   describe('handleConnection', () => {
-    it('logs client connect', () => {
+    it('joins room with userId when token valid', () => {
+      const client = {
+        id: 'abc',
+        data: {},
+        handshake: { headers: { authorization: 'Bearer valid-token' } },
+        join: jest.fn(),
+        disconnect: jest.fn(),
+      } as unknown as Socket;
       gateway.io = mockServer(1);
-      const spy = jest.spyOn(gateway['logger'], 'log');
-      gateway.handleConnection(mockClient('abc'));
-      expect(spy).toHaveBeenCalledWith('Client id: abc connected');
+
+      gateway.handleConnection(client);
+
+      expect(client.join).toHaveBeenCalledWith('user-123');
+      expect(client.disconnect).not.toHaveBeenCalled();
+    });
+
+    it('disconnects when no auth header', () => {
+      const client = {
+        id: 'abc',
+        data: {},
+        handshake: { headers: {} },
+        join: jest.fn(),
+        disconnect: jest.fn(),
+      } as unknown as Socket;
+      gateway.io = mockServer(1);
+
+      gateway.handleConnection(client);
+
+      expect(client.disconnect).toHaveBeenCalled();
+      expect(client.join).not.toHaveBeenCalled();
+    });
+
+    it('disconnects when token invalid', () => {
+      mockAuthService.verifyJwt.mockImplementationOnce(() => {
+        throw new Error('invalid token');
+      });
+      const client = {
+        id: 'abc',
+        data: {},
+        handshake: { headers: { authorization: 'Bearer bad-token' } },
+        join: jest.fn(),
+        disconnect: jest.fn(),
+      } as unknown as Socket;
+      gateway.io = mockServer(1);
+
+      gateway.handleConnection(client);
+
+      expect(client.disconnect).toHaveBeenCalled();
     });
   });
 
@@ -44,7 +95,20 @@ describe('NotificationGateway', () => {
     it('logs client disconnect', () => {
       const spy = jest.spyOn(gateway['logger'], 'log');
       gateway.handleDisconnect(mockClient('abc'));
-      expect(spy).toHaveBeenCalledWith('Cliend id:abc disconnected');
+      expect(spy).toHaveBeenCalledWith('Client id:abc disconnected');
+    });
+  });
+
+  describe('sendNotification', () => {
+    it('emits notification to user room and returns ok', () => {
+      const emitMock = jest.fn();
+      gateway.io = { to: jest.fn().mockReturnValue({ emit: emitMock }) } as unknown as Server;
+
+      const result = gateway.sendNotification('user-123');
+
+      expect(gateway.io.to).toHaveBeenCalledWith('user-123');
+      expect(emitMock).toHaveBeenCalledWith('notification', { data: 'yo' });
+      expect(result).toBe('ok');
     });
   });
 
