@@ -1,12 +1,13 @@
-import { Controller, Get } from '@nestjs/common';
-import { NotificationServiceService } from './notification-service.service';
+import { Controller, Post } from '@nestjs/common';
+import { NotificationGateway } from './notification/notification.gateway';
+import { UserId } from '@app/auth';
 
-@Controller()
+@Controller('notification')
 export class NotificationServiceController {
-  constructor(private readonly notificationServiceService: NotificationServiceService) {}
+  constructor(private readonly notificationGateway: NotificationGateway) {}
 
-  @Get()
-  getHello(): string {
-    return this.notificationServiceService.getHello();
+  @Post('send')
+  sendNotification(@UserId() userId: string): string {
+    return this.notificationGateway.sendNotification(userId);
   }
 }

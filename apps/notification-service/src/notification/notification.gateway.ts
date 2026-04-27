@@ -1,3 +1,4 @@
+import { AuthService } from '@app/auth';
 import { Logger } from '@nestjs/common';
 import {
   OnGatewayConnection,
@@ -10,12 +11,13 @@ import {
 
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway()
+@WebSocketGateway({ cors: { origin: '*' } })
 export class NotificationGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   private readonly logger = new Logger(NotificationGateway.name);
 
+  constructor(private readonly authService: AuthService) {}
   @WebSocketServer() io!: Server;
 
   afterInit() {
@@ -23,14 +25,33 @@ export class NotificationGateway
   }
 
   handleConnection(client: Socket) {
-    const { sockets } = this.io.sockets;
+    this.logger.log(`Client connected: ${client.id}`);
 
-    this.logger.log(`Client id: ${client.id} connected`);
-    this.logger.debug(`Number of connected clients: ${sockets.size}`);
+    let userId: string;
+    try {
+      const authHeader = client.handshake.headers.authorization;
+      if (!authHeader) {
+        throw new Error('invalid token');
+      }
+      userId = this.authService.verifyJwt(authHeader);
+      (client.data as { userId: string }).userId = userId;
+    } catch {
+      client.disconnect();
+      return;
+    }
+    void client.join(userId);
+    this.logger.debug(
+      `Number of connected clients: ${this.io.sockets.sockets.size}`,
+    );
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.log(`Cliend id:${client.id} disconnected`);
+    this.logger.log(`Client id:${client.id} disconnected`);
+  }
+
+  sendNotification(userId: string): string {
+    this.io.to(userId).emit('notification', { data: 'yo' });
+    return 'ok';
   }
 
   @SubscribeMessage('ping')
