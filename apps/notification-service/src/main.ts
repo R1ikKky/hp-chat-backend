@@ -15,7 +15,7 @@ async function bootstrap() {
         brokers: [process.env.KAFKA_BROKER ?? 'localhost:9092'],
       },
       consumer: {
-        groupId: 'notification-consumer',
+        groupId: 'notification-service',
       },
     },
   });

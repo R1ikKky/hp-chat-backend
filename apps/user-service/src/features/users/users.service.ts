@@ -1,8 +1,10 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
+  OnModuleInit,
 } from '@nestjs/common';
 import { IUsersRepository } from './users-repository.adapter';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -21,9 +23,11 @@ import { IncreaseBalanceDto } from './dto/increase-balance.dto';
 import { DecreaseBalanceDto } from './dto/decrease-balance.dto';
 import { TransferMoneyDto } from './dto/transfer-money.dto';
 import { DataSource } from 'typeorm';
+import { ClientKafka } from '@nestjs/microservices';
+import { TransferCompletedEvent } from './dto/transfer-completed.event';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
   logger = new Logger(UsersService.name, { timestamp: true });
 
   constructor(
@@ -32,7 +36,13 @@ export class UsersService {
     private readonly avatarRepository: IAvatarRepository,
     private readonly redisService: RedisService,
     private readonly dataSource: DataSource,
+    @Inject('NOTIFICATION_SERVICE')
+    private readonly notificationClient: ClientKafka,
   ) {}
+
+  async onModuleInit() {
+    await this.notificationClient.connect();
+  }
 
   async getAllExistingUsers(): Promise<UserDto[]> {
     try {
@@ -367,6 +377,11 @@ export class UsersService {
       }
 
       await queryRunner.commitTransaction();
+
+      this.notificationClient.emit(
+        'transfer-completed',
+        new TransferCompletedEvent(senderId, receiverId, amount),
+      );
 
       return `transfer from ${senderId} to ${receiverId} executed`;
     } catch (error) {

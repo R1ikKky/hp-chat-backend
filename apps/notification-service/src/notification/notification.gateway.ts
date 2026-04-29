@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 
 import { Server, Socket } from 'socket.io';
+import { TransferCompletedEvent } from '../transfer-completed.event';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class NotificationGateway
@@ -49,8 +50,19 @@ export class NotificationGateway
     this.logger.log(`Client id:${client.id} disconnected`);
   }
 
-  sendNotification(userId: string): string {
-    this.io.to(userId).emit('notification', { data: 'yo' });
+  sendNotification({
+    senderId,
+    receiverId,
+    amount,
+  }: TransferCompletedEvent): string {
+    this.io.to(senderId).emit('notification', {
+      data: `u sent ${amount} amount of money to ${receiverId}`,
+    });
+
+    this.io.to(receiverId).emit('notification', {
+      data: `u recieved ${amount} amount of money from ${senderId}`,
+    });
+
     return 'ok';
   }
 

@@ -10,11 +10,27 @@ import { AuthGuard } from '@app/auth';
 import { refreshTokenRepositoryProvider } from '../../auth/refresh-token-repository.provider';
 import { AvatarEntity } from '../avatar/entities/avatar.entity';
 import { avatarRepositoryProvider } from '../avatar/avatar-repository.provider';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
     ProvidersModule,
     TypeOrmModule.forFeature([UsersEntity, RefreshTokenEntity, AvatarEntity]),
+    ClientsModule.register([
+      {
+        name: 'NOTIFICATION_SERVICE',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'notification',
+            brokers: [process.env.KAFKA_BROKER ?? 'localhost:9092'],
+          },
+          consumer: {
+            groupId: 'user-service-client',
+          },
+        },
+      },
+    ]),
   ],
   providers: [
     UsersService,

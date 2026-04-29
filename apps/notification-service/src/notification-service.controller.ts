@@ -1,13 +1,19 @@
-import { Controller, Post } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { NotificationGateway } from './notification/notification.gateway';
-import { UserId } from '@app/auth';
+import { EventPattern, Payload } from '@nestjs/microservices';
+import type { TransferCompletedPayload } from './transfer-completed-payload.interface';
 
 @Controller('notification')
 export class NotificationServiceController {
   constructor(private readonly notificationGateway: NotificationGateway) {}
 
-  @Post('send')
-  sendNotification(@UserId() userId: string): string {
-    return this.notificationGateway.sendNotification(userId);
+  // @Post('send')
+  // sendNotification(@UserId() userId: string): string {
+  //   return this.notificationGateway.sendNotification(userId);
+  // }
+
+  @EventPattern('transfer-completed')
+  sendTransferNotification(@Payload() data: TransferCompletedPayload) {
+    this.notificationGateway.sendNotification(data);
   }
 }
