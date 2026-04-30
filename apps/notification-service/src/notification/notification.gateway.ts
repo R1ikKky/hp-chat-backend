@@ -11,6 +11,9 @@ import {
 
 import { Server, Socket } from 'socket.io';
 import { TransferCompletedEvent } from '../dto/transfer-completed.event';
+import { InjectModel } from '@nestjs/mongoose';
+import { Notification } from '../schemas/notification.schema';
+import { Model } from 'mongoose';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class NotificationGateway
@@ -18,7 +21,11 @@ export class NotificationGateway
 {
   private readonly logger = new Logger(NotificationGateway.name);
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<Notification>,
+  ) {}
   @WebSocketServer() io!: Server;
 
   afterInit() {
@@ -62,6 +69,8 @@ export class NotificationGateway
     this.io.to(receiverLogin).emit('notification', {
       data: `u recieved ${amount} amount of money from ${senderLogin}`,
     });
+
+    void this.notificationModel.create({ senderLogin, receiverLogin, amount });
 
     return 'ok';
   }
