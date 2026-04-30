@@ -10,7 +10,7 @@ import {
 } from '@nestjs/websockets';
 
 import { Server, Socket } from 'socket.io';
-import { TransferCompletedEvent } from '../transfer-completed.event';
+import { TransferCompletedEvent } from '../dto/transfer-completed.event';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class NotificationGateway
@@ -28,19 +28,19 @@ export class NotificationGateway
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
 
-    let userId: string;
+    let userLogin: string;
     try {
       const authHeader = client.handshake.headers.authorization;
       if (!authHeader) {
         throw new Error('invalid token');
       }
-      userId = this.authService.verifyJwt(authHeader);
-      (client.data as { userId: string }).userId = userId;
+      userLogin = this.authService.verifyJwt(authHeader);
+      (client.data as { userLogin: string }).userLogin = userLogin;
     } catch {
       client.disconnect();
       return;
     }
-    void client.join(userId);
+    void client.join(userLogin);
     this.logger.debug(
       `Number of connected clients: ${this.io.sockets.sockets.size}`,
     );
@@ -51,16 +51,16 @@ export class NotificationGateway
   }
 
   sendNotification({
-    senderId,
-    receiverId,
+    senderLogin,
+    receiverLogin,
     amount,
   }: TransferCompletedEvent): string {
-    this.io.to(senderId).emit('notification', {
-      data: `u sent ${amount} amount of money to ${receiverId}`,
+    this.io.to(senderLogin).emit('notification', {
+      data: `u sent ${amount} amount of money to ${receiverLogin}`,
     });
 
-    this.io.to(receiverId).emit('notification', {
-      data: `u recieved ${amount} amount of money from ${senderId}`,
+    this.io.to(receiverLogin).emit('notification', {
+      data: `u recieved ${amount} amount of money from ${senderLogin}`,
     });
 
     return 'ok';

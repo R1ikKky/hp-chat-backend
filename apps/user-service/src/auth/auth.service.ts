@@ -63,6 +63,7 @@ export class AuthService {
       const tokens = await this.generateUserTokens(
         user.id,
         user.role,
+        user.login,
         userAgent,
         ip,
       );
@@ -102,6 +103,7 @@ export class AuthService {
       const tokens = await this.generateUserTokens(
         user.id,
         user.role,
+        user.login,
         userAgent,
         ip,
       );
@@ -161,6 +163,7 @@ export class AuthService {
       return this.generateUserTokens(
         token.userId,
         token.user.role,
+        token.user.login,
         userAgent,
         ip,
       );
@@ -179,11 +182,12 @@ export class AuthService {
   async generateUserTokens(
     userId: string,
     userRole: RoleEnum,
+    userLogin: string,
     userAgent: string,
     ip: string,
   ): Promise<TokensDto> {
     const accessToken = this.jwtService.sign(
-      { userId, userRole },
+      { userId, userRole, userLogin },
       { expiresIn: '15m' },
     );
     const refreshToken = this.jwtService.sign({ userId }, { expiresIn: '90d' });

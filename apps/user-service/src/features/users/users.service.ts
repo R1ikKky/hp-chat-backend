@@ -345,9 +345,15 @@ export class UsersService implements OnModuleInit {
   async transferMoney(
     { amount, receiverId }: TransferMoneyDto,
     senderId: string,
+    senderLogin: string,
   ): Promise<string> {
     if (senderId === receiverId) {
       throw new BadRequestException('self transfers not allowed');
+    }
+
+    const receiver = await this.usersRepository.findUserById(receiverId);
+    if (!receiver) {
+      throw new BadRequestException('receiver not found');
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -380,7 +386,7 @@ export class UsersService implements OnModuleInit {
 
       this.notificationClient.emit(
         'transfer-completed',
-        new TransferCompletedEvent(senderId, receiverId, amount),
+        new TransferCompletedEvent(senderLogin, receiver.login, amount),
       );
 
       return `transfer from ${senderId} to ${receiverId} executed`;

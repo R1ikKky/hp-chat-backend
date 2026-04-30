@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { NotificationGateway } from './notification/notification.gateway';
 import { EventPattern, Payload } from '@nestjs/microservices';
-import type { TransferCompletedPayload } from './transfer-completed-payload.interface';
+import type { TransferCompletedPayload } from './dto/transfer-completed-payload.interface';
 
 @Controller('notification')
 export class NotificationServiceController {

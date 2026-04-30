@@ -5,6 +5,7 @@ import { RoleEnum } from './enums/role.enum';
 interface JwtPayload {
   userId: string;
   userRole: RoleEnum;
+  userLogin: string;
 }
 
 @Injectable()
@@ -20,7 +21,7 @@ export class AuthService {
 
     try {
       const payload = this.jwtService.verify<JwtPayload>(token);
-      return payload.userId;
+      return payload.userLogin;
     } catch (e) {
       throw new Error(`invalid token${String(e)}`);
     }

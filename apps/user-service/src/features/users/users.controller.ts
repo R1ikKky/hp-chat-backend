@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Public, RoleEnum } from '@app/auth';
+import { Public, RoleEnum, UserLogin } from '@app/auth';
 import { RecoverUserDto } from './dto/recover-user.dto';
 import { RecreateUserDto } from './dto/recreate-user.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -249,7 +249,12 @@ export class UsersController {
   async transferMoney(
     @Body() transferMoneyData: TransferMoneyDto,
     @UserId() senderId: string,
+    @UserLogin() senderLogin: string,
   ): Promise<string> {
-    return this.usersService.transferMoney(transferMoneyData, senderId);
+    return this.usersService.transferMoney(
+      transferMoneyData,
+      senderId,
+      senderLogin,
+    );
   }
 }

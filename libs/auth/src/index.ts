@@ -6,3 +6,4 @@ export * from './enums/role.enum';
 export * from './interfaces/custom-request.interface';
 export * from './decorators/public.decorator';
 export * from './decorators/user-id.decorator';
+export * from './decorators/user-login.decorator';

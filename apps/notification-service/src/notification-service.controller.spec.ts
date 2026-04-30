@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationServiceController } from './notification-service.controller';
 import { NotificationServiceService } from './notification-service.service';
+import { expect, beforeEach, describe, it } from '@jest/globals';
 
 describe('NotificationServiceController', () => {
   let notificationServiceController: NotificationServiceController;
@@ -11,7 +12,9 @@ describe('NotificationServiceController', () => {
       providers: [NotificationServiceService],
     }).compile();
 
-    notificationServiceController = app.get<NotificationServiceController>(NotificationServiceController);
+    notificationServiceController = app.get<NotificationServiceController>(
+      NotificationServiceController,
+    );
   });
 
   describe('root', () => {

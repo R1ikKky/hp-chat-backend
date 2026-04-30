@@ -14,6 +14,7 @@ import { RoleEnum } from '../common/enums/role.enum';
 interface JwtPayload {
   userId: string;
   userRole: RoleEnum;
+  userLogin: string;
 }
 
 @Injectable()
@@ -44,6 +45,7 @@ export class AuthGuard implements CanActivate {
       const payload = this.jwtService.verify<JwtPayload>(token);
       request.userId = payload.userId;
       request.userRole = payload.userRole;
+      request.userLogin = payload.userLogin;
     } catch (e) {
       throw new UnauthorizedException(`invalid token${String(e)}`);
     }

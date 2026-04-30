@@ -1,5 +1,5 @@
 export interface TransferCompletedPayload {
-  senderId: string;
-  receiverId: string;
+  senderLogin: string;
+  receiverLogin: string;
   amount: number;
 }
