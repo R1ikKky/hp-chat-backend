@@ -16,6 +16,7 @@ async function bootstrap() {
       },
       consumer: {
         groupId: 'notification-service',
+        allowAutoTopicCreation: true,
       },
     },
   });
