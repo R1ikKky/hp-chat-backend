@@ -7,6 +7,7 @@ import { usersRepositoryProvider } from '../features/users/users-repository.prov
 import { ProvidersModule } from '../providers/providers.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { refreshTokenRepositoryProvider } from './refresh-token-repository.provider';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   controllers: [AuthController],
@@ -26,6 +27,21 @@ import { refreshTokenRepositoryProvider } from './refresh-token-repository.provi
       global: true,
       inject: [ConfigService],
     }),
+    ClientsModule.register([
+      {
+        name: 'NOTIFICATION_SERVICE',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'notification',
+            brokers: [process.env.KAFKA_BROKER ?? 'localhost:9092'],
+          },
+          consumer: {
+            groupId: 'auth-service-client',
+          },
+        },
+      },
+    ]),
   ],
 })
 export class AuthModule {}

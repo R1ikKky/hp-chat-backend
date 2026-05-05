@@ -1,8 +1,10 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
+  OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import { LoginDto, LoginResponseDto } from './dto/login.dto';
@@ -15,9 +17,11 @@ import { LogoutDto } from './dto/logout.dto';
 import { RoleEnum } from '@app/auth';
 import { DataSource } from 'typeorm';
 import { TokensDto } from './dto/tokens.dto';
+import { RedisService } from '../providers/databases/redis/redis.service';
+import { ClientKafka } from '@nestjs/microservices';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   private readonly logger = new Logger(AuthService.name, { timestamp: true });
 
   constructor(
@@ -25,7 +29,14 @@ export class AuthService {
     private readonly usersRepository: IUsersRepository,
     private readonly refreshTokenRepository: IRefreshTokenRepository,
     private readonly dataSource: DataSource,
+    private readonly redisService: RedisService,
+    @Inject('NOTIFICATION_SERVICE')
+    private readonly notificationClient: ClientKafka,
   ) {}
+
+  async onModuleInit() {
+    await this.notificationClient.connect();
+  }
 
   async signup(
     signupData: SignupDto,
@@ -49,6 +60,15 @@ export class AuthService {
       if (phoneOrLoginInUse) {
         throw new BadRequestException('phone or login already in use');
       }
+
+      const numberIsVerified = await this.redisService.get<boolean>(
+        `phone-verified:${phone}`,
+      );
+      if (!numberIsVerified) {
+        throw new BadRequestException('phone not verified');
+      }
+
+      await this.redisService.del(`phone-verified:${phone}`);
 
       const salt = await bcrypt.genSalt();
       const hashedPassword = await bcrypt.hash(password, salt);
@@ -216,5 +236,29 @@ export class AuthService {
       ip,
       expiresIn,
     );
+  }
+
+  async sendOtp(phone: string): Promise<string> {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const key = `otp:${phone}`;
+
+    await this.redisService.set(key, code, 300);
+
+    this.notificationClient.emit('send-sms-otp', {
+      phone,
+      message: `Ваш код подтверждения: ${code}`,
+    });
+
+    return 'otp sent';
+  }
+
+  async verifyOtp(phone: string, code: string): Promise<boolean> {
+    const key = `otp:${phone}`;
+    const stored = await this.redisService.get<string>(key);
+    if (!stored || stored !== code) return false;
+
+    await this.redisService.del(key);
+    await this.redisService.set(`phone-verified:${phone}`, true, 600);
+    return true;
   }
 }

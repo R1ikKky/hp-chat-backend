@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { NotificationServiceModule } from './notification-service.module';
+import { NotificationServiceModule } from './notification.module';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
@@ -13,10 +13,10 @@ async function bootstrap() {
       client: {
         clientId: 'notification-service',
         brokers: [process.env.KAFKA_BROKER ?? 'localhost:9092'],
+        allowAutoTopicCreation: true,
       },
       consumer: {
         groupId: 'notification-service',
-        allowAutoTopicCreation: true,
       },
     },
   });

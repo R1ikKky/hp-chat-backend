@@ -14,6 +14,8 @@ import { Public } from '@app/auth';
 import { LogoutDto } from './dto/logout.dto';
 import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TokensDto } from './dto/tokens.dto';
+import { SendOtpDto } from './dto/send-otp.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -101,5 +103,29 @@ export class AuthController {
   @Post('logout')
   async logout(@Body() logoutData: LogoutDto): Promise<string> {
     return this.authService.logout(logoutData);
+  }
+
+  @ApiBody({ type: SendOtpDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'otp sent',
+    type: 'string',
+  })
+  @Public()
+  @Post('send-otp')
+  async sendOtp(@Body() { phone }: SendOtpDto): Promise<string> {
+    return this.authService.sendOtp(phone);
+  }
+
+  @ApiBody({ type: VerifyOtpDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'true/false',
+    type: Boolean,
+  })
+  @Public()
+  @Post('verify-otp')
+  async verifyOtp(@Body() { phone, code }: VerifyOtpDto): Promise<boolean> {
+    return this.authService.verifyOtp(phone, code);
   }
 }

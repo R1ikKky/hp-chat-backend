@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthGuard, AuthModule } from '@app/auth';
-import { NotificationServiceController } from './notification-service.controller';
+import { NotificationServiceController } from './notification.controller';
 import { NotificationGateway } from './notification/notification.gateway';
 import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -9,6 +9,7 @@ import {
   Notification,
   NotificationSchema,
 } from './schemas/notification.schema';
+import { SmsService } from './providers/sms.service';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import {
       useClass: AuthGuard,
     },
     NotificationGateway,
+    SmsService,
   ],
 })
 export class NotificationServiceModule {}

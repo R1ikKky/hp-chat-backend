@@ -4,7 +4,7 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { io, Socket } from 'socket.io-client';
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
-import { NotificationServiceModule } from '../src/notification-service.module';
+import { NotificationServiceModule } from '../src/notification.module';
 import { NotificationGateway } from '../src/notification/notification.gateway';
 
 const TEST_PORT = 3099;
