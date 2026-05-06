@@ -1,7 +1,7 @@
-import { IsInt, Min } from 'class-validator';
+import { IsInt, IsPositive } from 'class-validator';
 
 export class IncreaseBalanceDto {
   @IsInt()
-  @Min(0)
+  @IsPositive()
   readonly amount!: number;
 }
