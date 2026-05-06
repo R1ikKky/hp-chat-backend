@@ -6,6 +6,7 @@ import { ProvidersModule } from './providers/providers.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard, RolesGuard } from '@app/auth';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -14,12 +15,28 @@ import { ScheduleModule } from '@nestjs/schedule';
     ConfigsModule,
     ProvidersModule,
     ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([
+      {
+        name: 'global',
+        ttl: 60_000,
+        limit: 100,
+      },
+      {
+        name: 'auth',
+        ttl: 60_000,
+        limit: 6,
+      },
+    ]),
   ],
   controllers: [],
   providers: [
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
     {
       provide: APP_GUARD,

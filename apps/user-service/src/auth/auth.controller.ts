@@ -16,6 +16,7 @@ import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TokensDto } from './dto/tokens.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -37,6 +38,7 @@ export class AuthController {
     description: 'phone or login already in use',
   })
   @Public()
+  @Throttle({ auth: { ttl: 3_600_000, limit: 15 } })
   @Post('signup')
   async signup(
     @Body() signupData: SignupDto,
@@ -61,6 +63,7 @@ export class AuthController {
     description: 'this user was deleted',
   })
   @Public()
+  @Throttle({ auth: { ttl: 60_000, limit: 6 } })
   @Post('login')
   async login(
     @Body() loginData: LoginDto,
@@ -112,6 +115,7 @@ export class AuthController {
     type: 'string',
   })
   @Public()
+  @Throttle({ auth: { ttl: 60_000, limit: 2 } })
   @Post('send-otp')
   async sendOtp(@Body() { phone }: SendOtpDto): Promise<string> {
     return this.authService.sendOtp(phone);
@@ -124,6 +128,7 @@ export class AuthController {
     type: Boolean,
   })
   @Public()
+  @Throttle({ auth: { ttl: 300_000, limit: 5 } })
   @Post('verify-otp')
   async verifyOtp(@Body() { phone, code }: VerifyOtpDto): Promise<boolean> {
     return this.authService.verifyOtp(phone, code);
