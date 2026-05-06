@@ -2,23 +2,23 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsPhoneNumber, IsString } from 'class-validator';
 
 export class RecreateUserDto {
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsString()
   readonly login!: string;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsPhoneNumber('RU')
   readonly phone!: string;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsString()
   readonly password!: string;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsNumber()
   readonly age!: number;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsString()
   readonly bio!: string;
 }

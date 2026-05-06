@@ -2,27 +2,27 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsPhoneNumber, IsString } from 'class-validator';
 
 export class UpdateUserDto {
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsString()
   @IsOptional()
   readonly login!: string;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsPhoneNumber('RU')
   @IsOptional()
   readonly phone!: string;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsString()
   @IsOptional()
   readonly password!: string;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsNumber()
   @IsOptional()
   readonly age!: number;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsString()
   @IsOptional()
   readonly bio!: string;

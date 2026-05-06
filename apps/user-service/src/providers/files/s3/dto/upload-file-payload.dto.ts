@@ -7,25 +7,19 @@ export class UploadFilePayloadDto {
   @IsNotEmpty()
   readonly file!: IUploadedMulterFile;
 
-  @ApiProperty({
-    example: '/profiles/avatars',
-  })
+  @ApiProperty({ example: '/profiles/avatars' })
   @IsString()
   @IsNotEmpty()
   readonly folder!: string;
 
-  @ApiProperty({
-    example: 'file-name',
-  })
+  @ApiProperty({ example: 'file-name' })
   @IsString()
   @IsNotEmpty()
   readonly name!: string;
 }
 
 export class UploadFileResultDto {
-  @ApiProperty({
-    example: '/profiles/avatars',
-  })
+  @ApiProperty({ example: '/profiles/avatars' })
   @IsString()
   @IsNotEmpty()
   readonly path!: string;

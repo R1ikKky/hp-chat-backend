@@ -10,15 +10,15 @@ import { UserDto } from '../../common/dtos/user-public.dto';
 import { TokensDto } from './tokens.dto';
 
 export class SignupDto {
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsString()
   readonly login!: string;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsPhoneNumber('RU')
   readonly phone!: string;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsString()
   @MinLength(6)
   @Matches(/^(?=.*[0-9])/, {
@@ -26,17 +26,16 @@ export class SignupDto {
   })
   readonly password!: string;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsNumber()
   readonly age!: number;
 
-  @ApiProperty({ nullable: false })
+  @ApiProperty()
   @IsString()
   readonly bio!: string;
 }
 
 export class SignupResponseDto {
   readonly user!: UserDto;
-
   readonly tokens!: TokensDto;
 }

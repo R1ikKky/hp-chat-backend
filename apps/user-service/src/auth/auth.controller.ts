@@ -1,42 +1,30 @@
-import {
-  Body,
-  Controller,
-  Headers,
-  HttpStatus,
-  Ip,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Headers, Ip, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, LoginResponseDto } from './dto/login.dto';
 import { SignupDto, SignupResponseDto } from './dto/signup.dto';
 import { RefreshTokenDto } from './dto/refresh-tokens.dto';
 import { Public } from '@app/auth';
 import { LogoutDto } from './dto/logout.dto';
-import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { TokensDto } from './dto/tokens.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { Throttle } from '@nestjs/throttler';
+import {
+  ApiAuthTag,
+  ApiLogin,
+  ApiLogout,
+  ApiRefreshTokens,
+  ApiSendOtp,
+  ApiSignup,
+  ApiVerifyOtp,
+} from './auth.swagger';
 
-@ApiTags('Auth')
+@ApiAuthTag
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiBody({ type: SignupDto })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Success',
-    type: SignupResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'user with the same login or phone has been deleted',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'phone or login already in use',
-  })
+  @ApiSignup()
   @Public()
   @Throttle({ auth: { ttl: 3_600_000, limit: 15 } })
   @Post('signup')
@@ -48,20 +36,7 @@ export class AuthController {
     return this.authService.signup(signupData, userAgent, ip);
   }
 
-  @ApiBody({ type: LoginDto })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Success',
-    type: LoginResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'wrong credentials',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'this user was deleted',
-  })
+  @ApiLogin()
   @Public()
   @Throttle({ auth: { ttl: 60_000, limit: 6 } })
   @Post('login')
@@ -73,16 +48,7 @@ export class AuthController {
     return this.authService.login(loginData, userAgent, ip);
   }
 
-  @ApiBody({ type: RefreshTokenDto })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Success',
-    type: TokensDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'invalid refresh token',
-  })
+  @ApiRefreshTokens()
   @Public()
   @Post('refresh')
   async refreshTokens(
@@ -97,23 +63,13 @@ export class AuthController {
     );
   }
 
-  @ApiBody({ type: LogoutDto })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Success',
-    type: 'string',
-  })
+  @ApiLogout()
   @Post('logout')
   async logout(@Body() logoutData: LogoutDto): Promise<string> {
     return this.authService.logout(logoutData);
   }
 
-  @ApiBody({ type: SendOtpDto })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'otp sent',
-    type: 'string',
-  })
+  @ApiSendOtp()
   @Public()
   @Throttle({ auth: { ttl: 60_000, limit: 2 } })
   @Post('send-otp')
@@ -121,12 +77,7 @@ export class AuthController {
     return this.authService.sendOtp(phone);
   }
 
-  @ApiBody({ type: VerifyOtpDto })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'true/false',
-    type: Boolean,
-  })
+  @ApiVerifyOtp()
   @Public()
   @Throttle({ auth: { ttl: 300_000, limit: 5 } })
   @Post('verify-otp')
