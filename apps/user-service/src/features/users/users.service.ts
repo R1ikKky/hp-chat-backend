@@ -152,7 +152,14 @@ export class UsersService implements OnModuleInit {
     try {
       await this.redisService.del('users:all');
 
-      //add number verification
+      const phoneVerified = await this.redisService.get<boolean>(
+        `phone-verified:${recoverUserData.phone}`,
+      );
+      if (!phoneVerified) {
+        throw new BadRequestException('phone not verified');
+      }
+      await this.redisService.del(`phone-verified:${recoverUserData.phone}`);
+
       const user = await this.usersRepository.findUserByPhoneWithDeleted(
         recoverUserData.phone,
       );
@@ -189,13 +196,20 @@ export class UsersService implements OnModuleInit {
         throw new BadRequestException('user already exists');
       }
 
+      const phoneVerified = await this.redisService.get<boolean>(
+        `phone-verified:${phone}`,
+      );
+      if (!phoneVerified) {
+        throw new BadRequestException('phone not verified');
+      }
+      await this.redisService.del(`phone-verified:${phone}`);
+
       const deletedUser =
         await this.usersRepository.deleteOneUserHardByPhone(phone);
       if (deletedUser.affected !== 1) {
         throw new InternalServerErrorException('couldnt delete user');
       }
 
-      //add number verification
       const salt = await bcrypt.genSalt();
       const hashedPassword = await bcrypt.hash(recreateUserData.password, salt);
 
