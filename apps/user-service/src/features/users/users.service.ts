@@ -398,6 +398,12 @@ export class UsersService implements OnModuleInit {
 
       await queryRunner.commitTransaction();
 
+      await Promise.all([
+        this.redisService.del(`users:${senderId}`),
+        this.redisService.del(`users:${receiverId}`),
+        this.redisService.del('users:all'),
+      ]);
+
       this.notificationClient.emit(
         'transfer-completed',
         new TransferCompletedEvent(senderLogin, receiver.login, amount),
