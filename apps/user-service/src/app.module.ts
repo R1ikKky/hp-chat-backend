@@ -1,0 +1,48 @@
+import { Module } from '@nestjs/common';
+import { AuthModule } from './auth/auth.module';
+import { FeaturesModule } from './features/features.module';
+import { ConfigsModule } from './configs/configs.module';
+import { ProvidersModule } from './providers/providers.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard, RolesGuard } from '@app/auth';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+
+@Module({
+  imports: [
+    AuthModule,
+    FeaturesModule,
+    ConfigsModule,
+    ProvidersModule,
+    ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([
+      {
+        name: 'global',
+        ttl: 60_000,
+        limit: 100,
+      },
+      {
+        name: 'auth',
+        ttl: 60_000,
+        limit: 6,
+      },
+    ]),
+  ],
+  controllers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
+  exports: [AuthModule, FeaturesModule, ConfigsModule, ProvidersModule],
+})
+export class AppModule {}
