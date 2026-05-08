@@ -5,7 +5,6 @@ import { SmscResponse } from '../dto/smsc-response';
 @Injectable()
 export class SmsService {
   private readonly logger = new Logger(SmsService.name);
-  private readonly baseUrl = `https://smsc.ru/sys/send.php`;
 
   constructor(private readonly cfg: ConfigService) {}
 
@@ -20,7 +19,8 @@ export class SmsService {
     });
 
     try {
-      const response = await fetch(`${this.baseUrl}?${params.toString()}`);
+      const baseUrl = this.cfg.getOrThrow<string>('SMSC_BASE_URL');
+      const response = await fetch(`${baseUrl}?${params.toString()}`);
       const data = (await response.json()) as SmscResponse;
 
       if (data.error_code) {
