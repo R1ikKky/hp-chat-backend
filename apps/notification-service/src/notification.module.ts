@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthGuard, AuthModule } from '@app/auth';
 import { NotificationServiceController } from './notification.controller';
@@ -13,6 +14,7 @@ import { SmsService } from './providers/sms.service';
 
 @Module({
   imports: [
+    HttpModule,
     ConfigModule.forRoot(),
     AuthModule,
     MongooseModule.forRootAsync({
