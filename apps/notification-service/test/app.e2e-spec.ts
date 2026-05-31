@@ -80,8 +80,8 @@ describe('Notification E2E', () => {
     const received = await new Promise<{ data: string }>((resolve) => {
       clientB.once('notification', resolve);
       gateway.sendNotification({
-        senderId: USER_A,
-        receiverId: USER_B,
+        senderLogin: USER_A,
+        receiverLogin: USER_B,
         amount: 100,
       });
     });
@@ -112,7 +112,11 @@ describe('Notification E2E', () => {
       setTimeout(() => resolve(false), 500);
     });
 
-    gateway.sendNotification({ senderId: USER_A, receiverId: USER_B, amount: 50 });
+    gateway.sendNotification({
+      senderLogin: USER_A,
+      receiverLogin: USER_B,
+      amount: 50,
+    });
 
     const [aGot, bGot, cGotWrong] = await Promise.all([
       aReceived,

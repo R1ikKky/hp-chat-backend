@@ -1,25 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationServiceController } from './notification.controller';
-import { NotificationService } from './providers/notification.service';
-import { expect, beforeEach, describe, it } from '@jest/globals';
+import { NotificationGateway } from './notification/notification.gateway';
+import { SmsService } from './providers/sms.service';
+import { expect, beforeEach, describe, it, jest } from '@jest/globals';
+
+const mockGateway = { sendNotification: jest.fn() };
+const mockSmsService = { sendSms: jest.fn() };
 
 describe('NotificationServiceController', () => {
-  let notificationServiceController: NotificationServiceController;
+  let controller: NotificationServiceController;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [NotificationServiceController],
-      providers: [NotificationService],
+      providers: [
+        { provide: NotificationGateway, useValue: mockGateway },
+        { provide: SmsService, useValue: mockSmsService },
+      ],
     }).compile();
 
-    notificationServiceController = app.get<NotificationServiceController>(
+    controller = app.get<NotificationServiceController>(
       NotificationServiceController,
     );
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(notificationServiceController.getHello()).toBe('Hello World!');
-    });
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
   });
 });

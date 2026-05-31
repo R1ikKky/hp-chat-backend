@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationGateway } from './notification.gateway';
 import { AuthService } from '@app/auth';
+import { getModelToken } from '@nestjs/mongoose';
+import { Notification } from '../schemas/notification.schema';
 import { Server, Socket } from 'socket.io';
 import { expect, beforeEach, describe, it, jest } from '@jest/globals';
 
@@ -13,6 +15,10 @@ const mockAuthService = {
   verifyJwt: jest.fn<() => string>().mockReturnValue('user-123'),
 };
 
+const mockNotificationModel = {
+  create: jest.fn().mockResolvedValue({}),
+};
+
 describe('NotificationGateway', () => {
   let gateway: NotificationGateway;
 
@@ -21,6 +27,10 @@ describe('NotificationGateway', () => {
       providers: [
         NotificationGateway,
         { provide: AuthService, useValue: mockAuthService },
+        {
+          provide: getModelToken(Notification.name),
+          useValue: mockNotificationModel,
+        },
       ],
     }).compile();
 
@@ -52,7 +62,9 @@ describe('NotificationGateway', () => {
 
       gateway.handleConnection(client);
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(client.join).toHaveBeenCalledWith('user-123');
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(client.disconnect).not.toHaveBeenCalled();
     });
 
@@ -68,7 +80,9 @@ describe('NotificationGateway', () => {
 
       gateway.handleConnection(client);
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(client.disconnect).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(client.join).not.toHaveBeenCalled();
     });
 
@@ -87,6 +101,7 @@ describe('NotificationGateway', () => {
 
       gateway.handleConnection(client);
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(client.disconnect).toHaveBeenCalled();
     });
   });
@@ -100,14 +115,23 @@ describe('NotificationGateway', () => {
   });
 
   describe('sendNotification', () => {
-    it('emits notification to user room and returns ok', () => {
+    it('emits notification to sender and receiver rooms and returns ok', () => {
       const emitMock = jest.fn();
-      gateway.io = { to: jest.fn().mockReturnValue({ emit: emitMock }) } as unknown as Server;
+      gateway.io = {
+        to: jest.fn().mockReturnValue({ emit: emitMock }),
+      } as unknown as Server;
 
-      const result = gateway.sendNotification('user-123');
+      const result = gateway.sendNotification({
+        senderLogin: 'user-123',
+        receiverLogin: 'user-456',
+        amount: 100,
+      });
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(gateway.io.to).toHaveBeenCalledWith('user-123');
-      expect(emitMock).toHaveBeenCalledWith('notification', { data: 'yo' });
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(gateway.io.to).toHaveBeenCalledWith('user-456');
+      expect(emitMock).toHaveBeenCalledWith('notification', expect.objectContaining({ data: expect.any(String) }));
       expect(result).toBe('ok');
     });
   });
