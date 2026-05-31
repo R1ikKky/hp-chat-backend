@@ -131,7 +131,10 @@ describe('NotificationGateway', () => {
       expect(gateway.io.to).toHaveBeenCalledWith('user-123');
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(gateway.io.to).toHaveBeenCalledWith('user-456');
-      expect(emitMock).toHaveBeenCalledWith('notification', expect.objectContaining({ data: expect.any(String) }));
+      expect(emitMock).toHaveBeenCalledWith(
+        'notification',
+        expect.objectContaining({ data: expect.any(String) }),
+      );
       expect(result).toBe('ok');
     });
   });
